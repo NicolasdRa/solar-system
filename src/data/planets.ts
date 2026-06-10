@@ -9,9 +9,23 @@ export interface MoonData {
   textureUrl?: string
   /** visual radius as a fraction of the parent planet's visual radius */
   relRadius: number
-  /** orbital distance in multiples of the parent planet's visual radius */
-  distance: number
-  /** orbital period in Earth days */
+  /** real semi-major axis of the orbit, in km (display scaling derives from this) */
+  aKm: number
+  eccentricity: number
+  /** inclination in degrees to the parent's equator (≈ Laplace plane), or to the ecliptic when eclipticFrame */
+  inclinationDeg: number
+  /**
+   * Earth's Moon only: its orbit precesses about the ecliptic pole and keeps
+   * ~5° to the ecliptic, so it mounts outside the parent's axial-tilt frame.
+   */
+  eclipticFrame?: boolean
+  /** ascending node longitude at J2000, degrees (0 where inclination is negligible) */
+  nodeDeg: number
+  /** longitude of periapsis at J2000, degrees (0 where e < 0.01) */
+  periapsisDeg: number
+  /** mean longitude at J2000, degrees — sets the real phase at any date */
+  meanLongitudeDeg: number
+  /** sidereal orbital period in Earth days (negative = retrograde) */
   period: number
   color: string
   /** a main moon: selectable, followable, and gets its own info panel */
@@ -167,8 +181,8 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Moon',
         relRadius: 0.27,
-        distance: 3.2,
-        period: 27.3,
+        aKm: 384400, eccentricity: 0.0554, inclinationDeg: 5.16, eclipticFrame: true, nodeDeg: 125.08, periapsisDeg: 83.2, meanLongitudeDeg: 218.5,
+        period: 27.3217,
         color: '#b8b4ac',
         textureUrl: '/textures/2k_moon.jpg',
         major: true,
@@ -211,8 +225,8 @@ export const PLANETS: PlanetData[] = [
     },
     features: { polarCaps: true },
     moons: [
-      { name: 'Phobos', relRadius: 0.12, distance: 2.4, period: 0.32, color: '#8a7f72' },
-      { name: 'Deimos', relRadius: 0.09, distance: 3.4, period: 1.26, color: '#9c9184' },
+      { name: 'Phobos', relRadius: 0.12, aKm: 9375, eccentricity: 0.0151, inclinationDeg: 1.1, nodeDeg: 0, periapsisDeg: 25.5, meanLongitudeDeg: 215.2, period: 0.31891, color: '#8a7f72' },
+      { name: 'Deimos', relRadius: 0.09, aKm: 23457, eccentricity: 0.0002, inclinationDeg: 1.8, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 259.3, period: 1.26244, color: '#9c9184' },
     ],
     facts: {
       type: 'Rocky planet',
@@ -242,8 +256,8 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Io',
         relRadius: 0.12,
-        distance: 2.2,
-        period: 1.77,
+        aKm: 421800, eccentricity: 0.0041, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 49.1, meanLongitudeDeg: 20.0,
+        period: 1.769138,
         color: '#d9c356',
         major: true,
         radiusKm: 1822,
@@ -253,8 +267,8 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Europa',
         relRadius: 0.1,
-        distance: 2.8,
-        period: 3.55,
+        aKm: 671100, eccentricity: 0.0094, inclinationDeg: 0.5, nodeDeg: 0, periapsisDeg: 229.0, meanLongitudeDeg: 214.4,
+        period: 3.551181,
         color: '#c7b9a4',
         major: true,
         radiusKm: 1561,
@@ -264,8 +278,8 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Ganymede',
         relRadius: 0.17,
-        distance: 3.5,
-        period: 7.15,
+        aKm: 1070400, eccentricity: 0.0011, inclinationDeg: 0.2, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 221.6,
+        period: 7.154553,
         color: '#9a8d7c',
         major: true,
         radiusKm: 2634,
@@ -275,8 +289,8 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Callisto',
         relRadius: 0.16,
-        distance: 4.4,
-        period: 16.7,
+        aKm: 1882700, eccentricity: 0.0074, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 352.9, meanLongitudeDeg: 80.3,
+        period: 16.689017,
         color: '#6f6557',
         major: true,
         radiusKm: 2410,
@@ -309,33 +323,33 @@ export const PLANETS: PlanetData[] = [
     palette: ['#a8895a', '#d6bb8a', '#efe2c2'],
     ring: { inner: 1.4, outer: 2.4, color: '#c9b690', textureUrl: '/textures/2k_saturn_ring_alpha.png' },
     moons: [
-      { name: 'Mimas', relRadius: 0.045, distance: 2.8, period: 0.94, color: '#b5b2ac' },
+      { name: 'Mimas', relRadius: 0.045, aKm: 186000, eccentricity: 0.02, inclinationDeg: 1.6, nodeDeg: 0, periapsisDeg: 226.6, meanLongitudeDeg: 141.9, period: 0.942422, color: '#b5b2ac' },
       {
         name: 'Enceladus',
         relRadius: 0.05,
-        distance: 3.3,
-        period: 1.37,
+        aKm: 238400, eccentricity: 0.005, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 176.5,
+        period: 1.370218,
         color: '#e8eef0',
         major: true,
         radiusKm: 252,
         funFact:
           'Geysers at its south pole blast ocean water into space, feeding one of Saturn’s rings — its fresh snow makes it the most reflective world we know.',
       },
-      { name: 'Tethys', relRadius: 0.07, distance: 3.8, period: 1.89, color: '#c8c5be' },
-      { name: 'Dione', relRadius: 0.07, distance: 4.3, period: 2.74, color: '#bdb9b0' },
-      { name: 'Rhea', relRadius: 0.09, distance: 4.9, period: 4.52, color: '#b0aca3' },
+      { name: 'Tethys', relRadius: 0.07, aKm: 295000, eccentricity: 0.001, inclinationDeg: 1.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 248.3, period: 1.887802, color: '#c8c5be' },
+      { name: 'Dione', relRadius: 0.07, aKm: 377700, eccentricity: 0.002, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.0, period: 2.736915, color: '#bdb9b0' },
+      { name: 'Rhea', relRadius: 0.09, aKm: 527200, eccentricity: 0.001, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 209.5, period: 4.5175, color: '#b0aca3' },
       {
         name: 'Titan',
         relRadius: 0.18,
-        distance: 5.7,
-        period: 15.9,
+        aKm: 1221900, eccentricity: 0.029, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 156.9, meanLongitudeDeg: 168.6,
+        period: 15.945421,
         color: '#cfa84e',
         major: true,
         radiusKm: 2575,
         funFact:
           'The only moon with a thick atmosphere — under its orange smog, methane rain falls on rivers and seas of liquid natural gas.',
       },
-      { name: 'Iapetus', relRadius: 0.085, distance: 6.8, period: 79.3, color: '#8a7a66' },
+      { name: 'Iapetus', relRadius: 0.085, aKm: 3561700, eccentricity: 0.028, inclinationDeg: 15.5, nodeDeg: 0, periapsisDeg: 341.0, meanLongitudeDeg: 55.8, period: 79.331, color: '#8a7a66' },
     ],
     facts: {
       type: 'Gas giant',
@@ -362,21 +376,21 @@ export const PLANETS: PlanetData[] = [
     palette: ['#3e7f8f', '#6fb3c2', '#b7e0e8'],
     ring: { inner: 1.6, outer: 1.9, color: '#9fc4cc' },
     moons: [
-      { name: 'Miranda', relRadius: 0.06, distance: 2.4, period: 1.41, color: '#b8bcc4' },
-      { name: 'Ariel', relRadius: 0.09, distance: 2.9, period: 2.52, color: '#cfd2d6' },
-      { name: 'Umbriel', relRadius: 0.09, distance: 3.4, period: 4.14, color: '#6e6a66' },
+      { name: 'Miranda', relRadius: 0.06, aKm: 129846, eccentricity: 0.001, inclinationDeg: 4.4, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.7, period: 1.413479, color: '#b8bcc4' },
+      { name: 'Ariel', relRadius: 0.09, aKm: 190929, eccentricity: 0.001, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 203.1, period: 2.520379, color: '#cfd2d6' },
+      { name: 'Umbriel', relRadius: 0.09, aKm: 265986, eccentricity: 0.004, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 251.2, period: 4.144177, color: '#6e6a66' },
       {
         name: 'Titania',
         relRadius: 0.11,
-        distance: 4.0,
-        period: 8.71,
+        aKm: 436298, eccentricity: 0.002, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 281.6,
+        period: 8.705872,
         color: '#b3a89c',
         major: true,
         radiusKm: 789,
         funFact:
           'Uranus’s largest moon, sliced by canyons up to 1,600 km long — and like its planet, it orbits tipped on its side.',
       },
-      { name: 'Oberon', relRadius: 0.11, distance: 4.7, period: 13.46, color: '#a39588' },
+      { name: 'Oberon', relRadius: 0.11, aKm: 583511, eccentricity: 0.002, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 352.6, period: 13.463239, color: '#a39588' },
     ],
     facts: {
       type: 'Ice giant',
@@ -402,12 +416,12 @@ export const PLANETS: PlanetData[] = [
     perihelionLongitudeDeg: 44.97,
     palette: ['#1f3f9e', '#3a64d1', '#7e9ce8'],
     moons: [
-      { name: 'Proteus', relRadius: 0.055, distance: 2.3, period: 1.12, color: '#8d8a85' },
+      { name: 'Proteus', relRadius: 0.055, aKm: 117600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 276.8, period: 1.122315, color: '#8d8a85' },
       {
         name: 'Triton',
         relRadius: 0.11,
-        distance: 3.2,
-        period: -5.9,
+        aKm: 354800, eccentricity: 0.0, inclinationDeg: 157.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 241.1,
+        period: -5.876854,
         color: '#c4bdb2',
         major: true,
         radiusKm: 1353,
@@ -450,18 +464,18 @@ export const PLANETS: PlanetData[] = [
       {
         name: 'Charon',
         relRadius: 0.5,
-        distance: 3.0,
-        period: 6.4,
+        aKm: 19600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 304.1,
+        period: 6.387221,
         color: '#8d8377',
         major: true,
         radiusKm: 606,
         funFact:
           'Half the size of Pluto itself — the pair waltz around a point in the space between them, forever showing each other the same face.',
       },
-      { name: 'Styx', relRadius: 0.05, distance: 4.2, period: 20.2, color: '#9a948c' },
-      { name: 'Nix', relRadius: 0.06, distance: 4.9, period: 24.9, color: '#b0a99f' },
-      { name: 'Kerberos', relRadius: 0.05, distance: 5.6, period: 32.2, color: '#7d776f' },
-      { name: 'Hydra', relRadius: 0.06, distance: 6.3, period: 38.2, color: '#a8a29a' },
+      { name: 'Styx', relRadius: 0.05, aKm: 43200, eccentricity: 0.025, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 322.5, meanLongitudeDeg: 320.6, period: 20.162, color: '#9a948c' },
+      { name: 'Nix', relRadius: 0.06, aKm: 49300, eccentricity: 0.015, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 31.4, meanLongitudeDeg: 9.6, period: 24.855, color: '#b0a99f' },
+      { name: 'Kerberos', relRadius: 0.05, aKm: 58300, eccentricity: 0.01, inclinationDeg: 0.4, nodeDeg: 0, periapsisDeg: 346.4, meanLongitudeDeg: 262.5, period: 32.168, color: '#7d776f' },
+      { name: 'Hydra', relRadius: 0.06, aKm: 65200, eccentricity: 0.009, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 228.6, period: 38.202, color: '#a8a29a' },
     ],
     facts: {
       type: 'Dwarf planet (Kuiper Belt)',

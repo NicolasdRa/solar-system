@@ -10,7 +10,7 @@ import {
   useCloudAlphaTexture,
   useImageTexture,
 } from '../textures'
-import { MOON_MIN_RADIUS, scaleDistance, visualRadius } from '../scale'
+import { MOON_MIN_RADIUS, moonOrbitRadius, scaleDistance, visualRadius } from '../scale'
 import { simClock, bodyPositions } from '../clock'
 import { keplerPosition, orbitPath, type OrbitElements } from '../orbit'
 import { useSim } from '../store'
@@ -139,6 +139,12 @@ function Rings({ ring, planetRadius }: { ring: RingData; planetRadius: number })
       />
     </mesh>
   )
+}
+
+/** Faint ellipse around the parent — only shown while the system is in focus. */
+function MoonOrbitLine({ el }: { el: OrbitElements }) {
+  const points = useMemo(() => orbitPath(el, 128), [el])
+  return <Line points={points} color="#46506e" transparent opacity={0.35} lineWidth={1} />
 }
 
 /**
@@ -457,6 +463,24 @@ export function Planet({ data }: { data: PlanetData }) {
   const [labelInRange, setLabelInRange] = useState(true)
   const labelInRangeRef = useRef(true)
 
+  // real Kepler elements per moon: display semi-major axis from the active
+  // scale mode, real eccentricity/phase/period from the data
+  const moonElements = useMemo(() => {
+    const map = new Map<string, OrbitElements>()
+    for (const moon of data.moons ?? []) {
+      map.set(moon.name, {
+        a: moonOrbitRadius(moon, data, distanceMode, sizeMode, planetScale),
+        eccentricity: moon.eccentricity,
+        // JPL longitudes are compound (Ω + in-plane angle); the mounting
+        // group already applies Ω, so in-plane angles measure from the node
+        meanLongitude: (moon.meanLongitudeDeg - moon.nodeDeg) * DEG,
+        perihelionLongitude: (moon.periapsisDeg - moon.nodeDeg) * DEG,
+        period: moon.period,
+      })
+    }
+    return map
+  }, [data, distanceMode, sizeMode, planetScale])
+
   useFrame(({ camera }) => {
     if (!orbitRef.current) return
     keplerPosition(elements, simClock.days, orbitRef.current.position)
@@ -466,10 +490,9 @@ export function Planet({ data }: { data: PlanetData }) {
     if (data.moons) {
       for (const moon of data.moons) {
         const mesh = moonMeshes.current.get(moon.name)
-        if (!mesh) continue
-        const theta = TWO_PI * (simClock.days / moon.period)
-        const d = radius * moon.distance
-        mesh.position.set(Math.cos(theta) * d, 0, -Math.sin(theta) * d)
+        const el = moonElements.get(moon.name)
+        if (!mesh || !el) continue
+        keplerPosition(el, simClock.days, mesh.position)
         const target = moon.major ? bodyPositions.get(moon.name) : undefined
         if (target) mesh.getWorldPosition(target)
       }
@@ -495,6 +518,33 @@ export function Planet({ data }: { data: PlanetData }) {
     set({ selected: data.name })
   }
 
+  // moon orbit lines only render while this system is being inspected
+  const systemInFocus =
+    selected === data.name ||
+    following === data.name ||
+    (data.moons?.some((m) => m.name === selected || m.name === following) ?? false)
+
+  // node ⟶ inclination groups orient the orbital plane; positions from
+  // keplerPosition land in that plane's x/z
+  const renderMoon = (moon: MoonData) => {
+    const el = moonElements.get(moon.name)
+    return (
+      <group key={moon.name} rotation-y={moon.nodeDeg * DEG}>
+        <group rotation-x={moon.inclinationDeg * DEG}>
+          {systemInFocus && el && <MoonOrbitLine el={el} />}
+          <Moon
+            moon={moon}
+            planetRadius={radius}
+            meshRef={(mesh) => {
+              if (mesh) moonMeshes.current.set(moon.name, mesh)
+              else moonMeshes.current.delete(moon.name)
+            }}
+          />
+        </group>
+      </group>
+    )
+  }
+
   return (
     <group rotation-x={data.inclination * DEG}>
       {showOrbits && (
@@ -514,20 +564,14 @@ export function Planet({ data }: { data: PlanetData }) {
           {data.kind === 'earth' && <Clouds radius={radius} />}
           {data.atmosphere && <AtmosphereGlow radius={radius} config={data.atmosphere} />}
           {data.ring && <Rings ring={data.ring} planetRadius={radius} />}
-          {/* regular moons orbit the planet's equatorial plane, not the
-              ecliptic — which is why Uranus's moon system stands on its side */}
-          {data.moons?.map((moon) => (
-            <Moon
-              key={moon.name}
-              moon={moon}
-              planetRadius={radius}
-              meshRef={(mesh) => {
-                if (mesh) moonMeshes.current.set(moon.name, mesh)
-                else moonMeshes.current.delete(moon.name)
-              }}
-            />
-          ))}
+          {/* regular moons orbit the planet's equatorial plane (their
+              Laplace planes) — which is why Uranus's moon system stands
+              on its side */}
+          {data.moons?.filter((m) => !m.eclipticFrame).map(renderMoon)}
         </group>
+        {/* Earth's Moon: its orbit precesses about the ecliptic pole and
+            keeps ~5° to the ecliptic, so it mounts outside the tilt frame */}
+        {data.moons?.filter((m) => m.eclipticFrame).map(renderMoon)}
         {/* the followed planet fills the view — its distance-scaled label
             would blow up to screen size, so it hides while followed */}
         {showLabels && labelInRange && following !== data.name && (

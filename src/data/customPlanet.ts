@@ -74,13 +74,23 @@ export function randomPlanet(index: number): PlanetData {
   const moonCount = Math.min(MOON_NAMES.length, Math.floor(massFactor * rand(2, 7)))
   const name = `${NAMES[index % NAMES.length]}${index >= NAMES.length ? ` ${index}` : ''}`
   const moons: MoonData[] | undefined = moonCount
-    ? MOON_NAMES.slice(0, moonCount).map((suffix, i) => ({
-        name: `${name} ${suffix}`,
-        relRadius: rand(0.08, 0.2),
-        distance: 2.2 + i * rand(0.7, 1.1),
-        period: rand(1, 4) * Math.pow(2.2 + i, 1.5),
-        color: rgb(rand(120, 200), rand(120, 200), rand(120, 200)),
-      }))
+    ? MOON_NAMES.slice(0, moonCount).map((suffix, i) => {
+        // self-consistent invented system: spacing in parent radii, period
+        // from Kepler's third law with a per-system "mass" factor
+        const aParentRadii = 2.5 + i * rand(1.4, 2.4)
+        return {
+          name: `${name} ${suffix}`,
+          relRadius: rand(0.08, 0.2),
+          aKm: Math.round(aParentRadii * radiusKm),
+          eccentricity: Math.pow(Math.random(), 2) * 0.05,
+          inclinationDeg: rand(0, 3),
+          nodeDeg: 0,
+          periapsisDeg: rand(0, 360),
+          meanLongitudeDeg: rand(0, 360),
+          period: rand(0.9, 1.8) * Math.pow(aParentRadii / 2.5, 1.5),
+          color: rgb(rand(120, 200), rand(120, 200), rand(120, 200)),
+        }
+      })
     : undefined
 
   const yearsRound = (orbitalPeriod / 365.25).toFixed(1)

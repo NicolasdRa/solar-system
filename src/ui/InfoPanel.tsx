@@ -53,6 +53,8 @@ function MoonPanel({ moon, parent, t }: { moon: MoonData; parent: PlanetData; t:
             <dd>{fmt(moon.radiusKm, t)} {t.units.km}</dd>
           </>
         )}
+        <dt>{t.info.distanceFromPlanet(bodyName(parent.name, t))}</dt>
+        <dd>{fmt(moon.aKm, t)} {t.units.km}</dd>
         <dt>{t.info.orbitalPeriod}</dt>
         <dd>
           {t.units.days(fmt(Math.abs(moon.period), t, ONE_DECIMAL))}

@@ -1,4 +1,5 @@
 import type { DistanceMode, SizeMode } from './store'
+import type { MoonData } from './data/planets'
 
 const EARTH_RADIUS_KM = 6371
 const SUN_RADIUS_KM = 696_340
@@ -57,6 +58,37 @@ export function visualRadius(
     return Math.max(EARTH_VISUAL_TRUE * (radiusKm / EARTH_RADIUS_KM), 0.06)
   }
   return 1.15 * Math.sqrt(radiusKm / EARTH_RADIUS_KM)
+}
+
+/**
+ * Display semi-major axis for a moon's orbit, in scene units.
+ *
+ * 'true' distances use the real ruler — aKm converted exactly like planet
+ * radii, so the Moon really sits 60 Earth radii out and space gets empty.
+ * Other modes use Kepler-consistent compression: within each system,
+ * a_display ∝ |T|^(2/3), anchored so the innermost moon orbits at 2.2
+ * parent radii. Displayed spacing then obeys Kepler's third law, keeping
+ * period and distance dynamically consistent at every zoom level.
+ */
+export function moonOrbitRadius(
+  moon: MoonData,
+  parent: { radiusKm: number; moons?: MoonData[] },
+  distanceMode: DistanceMode,
+  sizeMode: SizeMode,
+  planetScale: number,
+): number {
+  const parentRadius = visualRadius(parent.radiusKm, sizeMode, distanceMode) * planetScale
+  const moonRadius = Math.max(parentRadius * moon.relRadius, MOON_MIN_RADIUS)
+  let a: number
+  if (distanceMode === 'true') {
+    a = moon.aKm * (EARTH_VISUAL_TRUE / EARTH_RADIUS_KM)
+  } else {
+    const tMin = Math.min(...(parent.moons ?? [moon]).map((m) => Math.abs(m.period)))
+    a = 2.2 * parentRadius * Math.pow(Math.abs(moon.period) / tMin, 2 / 3)
+  }
+  // the planet-size slider must never swallow a tight true orbit (Phobos
+  // sits at only 2.76 real Mars radii)
+  return Math.max(a, parentRadius * 1.5 + moonRadius)
 }
 
 /**
