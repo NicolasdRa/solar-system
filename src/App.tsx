@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
@@ -8,11 +8,23 @@ import { CameraRig, CameraModeManager } from './components/CameraRig'
 import { OVERVIEWS } from './scale'
 import { ControlPanel } from './ui/ControlPanel'
 import { InfoPanel } from './ui/InfoPanel'
+import { UndoToast } from './ui/UndoToast'
+import { CoachMark } from './ui/CoachMark'
+import { LanguageSwitch } from './ui/LanguageSwitch'
 import { useSim } from './store'
+import { useT } from './i18n'
 
 export default function App() {
   const trueScale = useSim((s) => s.distanceMode === 'true')
   const trueSizes = useSim((s) => s.sizeMode === 'true')
+  const locale = useSim((s) => s.locale)
+  const t = useT()
+  // keep the document itself in the active language — screen readers and
+  // browser translation prompts key off <html lang>
+  useEffect(() => {
+    document.documentElement.lang = locale
+    document.title = t.app.title
+  }, [locale, t])
   // the persisted distance mode is already hydrated here (localStorage is
   // synchronous), so the camera can start at the matching overview instead
   // of the compressed-mode default; captured once — later mode switches are
@@ -62,11 +74,14 @@ export default function App() {
       </Canvas>
       </SceneErrorBoundary>
       <header className="title">
-        <h1>Solar System &amp; Beyond</h1>
-        <p>drag to orbit · scroll to zoom · click a body for details</p>
+        <h1>{t.app.title}</h1>
+        <p>{t.app.tagline}</p>
       </header>
       <ControlPanel />
       <InfoPanel />
+      <UndoToast />
+      <CoachMark />
+      <LanguageSwitch />
     </div>
   )
 }

@@ -4,11 +4,24 @@
   --text: #dbe4f5;
   --text-dim: #8d99b8;
   --accent: #6fa8ff;
-  font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  /* body voice: warm humanist grotesque — friendly for all ages */
+  --font-body: 'Hanken Grotesk', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  /* instrument voice: monospaced for readouts and console labels, where
+     digit alignment is functional (ticking date, warp readout, data values) */
+  --font-instrument: 'Martian Mono', ui-monospace, 'SF Mono', monospace;
+  font-family: var(--font-body);
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* form controls don't inherit the document font by default */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 html,
@@ -24,6 +37,13 @@ body,
 .app {
   position: relative;
   height: 100%;
+}
+
+@supports (height: 100dvh) {
+  /* tracks the iOS/Android collapsing URL bar so nothing hides behind it */
+  .app {
+    height: 100dvh;
+  }
 }
 
 .app canvas {
@@ -53,9 +73,11 @@ body,
 
 .title h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-family: var(--font-instrument);
+  font-size: 20px;
+  font-weight: 400;
+  /* mono advances are already wide — tracking stays modest */
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -70,7 +92,8 @@ body,
 .control-panel {
   top: 18px;
   left: 18px;
-  width: 272px;
+  /* wide enough that the Orbits/Labels/Belts/Storms row stays on one line */
+  width: 324px;
   max-height: calc(100% - 36px);
   overflow-y: auto;
 }
@@ -111,8 +134,8 @@ body,
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   color: var(--text);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-instrument);
+  font-size: 12px;
   padding: 6px 8px;
   color-scheme: dark;
 }
@@ -128,8 +151,8 @@ body,
 }
 
 .dir-btn.reversed {
-  background: rgba(186, 130, 255, 0.2);
-  border-color: rgba(186, 130, 255, 0.45);
+  background: rgba(111, 168, 255, 0.34);
+  border-color: rgba(111, 168, 255, 0.7);
 }
 
 .hint {
@@ -140,18 +163,32 @@ body,
   font-variant-numeric: tabular-nums;
 }
 
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-close {
+  display: none;
+}
+
 .control-panel h2 {
   margin: 0 0 12px;
-  font-size: 13px;
-  letter-spacing: 0.14em;
+  font-family: var(--font-instrument);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .control-panel h3 {
   margin: 14px 0 8px;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-family: var(--font-instrument);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -187,6 +224,14 @@ body,
   font-size: 13px;
 }
 
+/* Spanish labels can't share one line at panel width — wrap as a clean 2×2
+   grid instead of a ragged 3+1 */
+.toggles:lang(es) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+}
+
 .toggles label {
   display: flex;
   align-items: center;
@@ -202,11 +247,17 @@ body,
   flex-direction: column;
   align-items: stretch;
   gap: 5px;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-family: var(--font-instrument);
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
   margin-bottom: 12px;
+}
+
+.mode-row .segmented,
+.mode-row .hint {
+  font-family: var(--font-body);
 }
 
 .segmented {
@@ -262,6 +313,20 @@ body,
   transition: background 0.15s, border-color 0.15s;
 }
 
+/* the star is not a planet — a warm tint sets it apart in the grid */
+.sun-btn {
+  background: rgba(255, 190, 110, 0.1);
+}
+
+.sun-btn:hover {
+  background: rgba(255, 190, 110, 0.2);
+}
+
+/* worlds the user made themselves */
+.custom-btn {
+  border: 1px dashed rgba(111, 168, 255, 0.45);
+}
+
 .body-btn:hover {
   background: rgba(111, 168, 255, 0.15);
 }
@@ -272,6 +337,10 @@ body,
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   background: rgba(111, 168, 255, 0.18);
   border: 1px solid rgba(111, 168, 255, 0.35);
   border-radius: 8px;
@@ -311,8 +380,8 @@ body,
 
 .credits {
   margin: 12px 0 0;
-  font-size: 10px;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: #9aa7c7;
 }
 
 .credits a {
@@ -341,12 +410,16 @@ body,
 }
 
 .close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: -6px -8px 0 0;
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 22px;
   cursor: pointer;
-  line-height: 1;
 }
 
 .close-btn:hover {
@@ -355,9 +428,11 @@ body,
 
 .body-type {
   margin: 2px 0 12px;
-  font-size: 12px;
+  font-family: var(--font-instrument);
+  font-size: 10px;
   color: var(--accent);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .info-panel dl {
@@ -375,11 +450,12 @@ body,
 .info-panel dd {
   margin: 0;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .fun-fact {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--text-dim);
   border-left: 2px solid var(--accent);
   padding-left: 10px;
@@ -408,6 +484,122 @@ body,
   max-width: 420px;
 }
 
+.scene-error details {
+  font-size: 12px;
+  color: var(--text-dim);
+  max-width: 420px;
+}
+
+.scene-error summary {
+  cursor: pointer;
+}
+
+/* ── undo toast ──────────────────────────────────── */
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 18px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  white-space: nowrap;
+  animation: toast-up 0.28s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+@keyframes toast-up {
+  from {
+    transform: translate(-50%, 16px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .undo-toast {
+    animation: none;
+  }
+}
+
+/* compact glyph button — keeps the transport row tight */
+.overview-btn {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── language switch ─────────────────────────────── */
+
+.lang-switch {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 16;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: var(--font-instrument);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: right 0.2s ease-out, background 0.15s;
+}
+
+.lang-switch:hover {
+  background: rgba(111, 168, 255, 0.18);
+}
+
+/* desktop info panel owns the top-right corner while open */
+@media (min-width: 761px) {
+  .lang-switch.shifted {
+    right: 326px;
+  }
+}
+
+/* mode-row hints inherit uppercase/letter-spacing from the row — reset */
+.mode-row .hint {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* inline tooltip stand-ins, only where tooltips can't exist */
+.touch-hint {
+  display: none;
+  flex-basis: 100%;
+  grid-column: 1 / -1;
+}
+
+@media (pointer: coarse) {
+  .touch-hint {
+    display: block;
+  }
+}
+
+/* ── touch gesture coach ─────────────────────────── */
+
+.coach-line {
+  display: none;
+}
+
 /* ── 3D labels (drei Html) ───────────────────────── */
 
 .body-label span {
@@ -423,14 +615,223 @@ body,
   color: #fff;
 }
 
-@media (max-width: 760px) {
-  .control-panel {
-    width: 200px;
+/* ── mobile: panels become bottom sheets ─────────── */
+
+.sheet-toggle {
+  display: none;
+}
+
+/* phones in portrait, or any coarse-pointer device too short for side panels */
+@media (max-width: 760px), ((pointer: coarse) and (max-height: 500px)) {
+  .title {
+    top: max(12px, env(safe-area-inset-top));
   }
-  .info-panel {
-    width: 230px;
+
+  .title h1 {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
   }
+
+  .sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -18px 4px;
+    padding: 16px 18px 8px;
+    background: rgba(10, 14, 28, 0.97);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .sheet-head h2 {
+    margin: 0;
+  }
+
+  .sheet-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: -8px -10px -8px 0;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+
   .title p {
     display: none;
+  }
+
+  .sheet-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    left: max(14px, env(safe-area-inset-left));
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 30;
+    min-height: 44px;
+    padding: 10px 18px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
+
+  .control-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: min(72dvh, 560px);
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    /* no top padding: the sticky sheet-head owns the top edge, so scrolled
+       content can't ghost through the rounded corners above it */
+    padding: 0 18px calc(18px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    z-index: 20;
+    transform: translateY(105%);
+    transition: transform 0.28s cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  .control-panel.open {
+    transform: translateY(0);
+  }
+
+  .info-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: min(60dvh, 480px);
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    z-index: 25;
+    animation: sheet-up 0.28s cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+
+  .body-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .lang-switch {
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
+    min-height: 34px;
+    padding: 6px 11px;
+  }
+
+  .coach-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    top: calc(max(12px, env(safe-area-inset-top)) + 44px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    max-width: calc(100% - 28px);
+    padding: 8px 10px 8px 16px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .coach-line button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 4px 6px;
+    cursor: pointer;
+    line-height: 1;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── touch ergonomics (phones AND tablets) ───────── */
+
+@media (pointer: coarse) {
+  .btn {
+    padding: 11px 14px;
+    font-size: 14px;
+  }
+
+  .body-btn {
+    padding: 12px 6px;
+    font-size: 13px;
+  }
+
+  .segmented button {
+    padding: 12px 4px;
+    font-size: 13px;
+  }
+
+  .toggles {
+    gap: 14px;
+    font-size: 14px;
+  }
+
+  .toggles input {
+    width: 19px;
+    height: 19px;
+  }
+
+  .slider-label input {
+    height: 36px;
+  }
+
+  .date-input {
+    /* 16px stops iOS Safari from auto-zooming the page on focus */
+    font-size: 16px;
+    padding: 9px 10px;
+  }
+
+  .close-btn {
+    font-size: 28px;
+    padding: 4px 10px;
+    margin-right: -10px;
+  }
+
+  .body-label span {
+    padding: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-panel {
+    transition: none;
+  }
+
+  .info-panel {
+    animation: none;
   }
 }
