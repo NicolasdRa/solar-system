@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { SolarSystem } from './components/SolarSystem'
+import { UniverseBackground } from './components/UniverseBackground'
+import { UNIVERSE_SCENE_PROPS } from './universeScene'
 import { SceneErrorBoundary } from './components/SceneErrorBoundary'
 import { CameraRig, CameraModeManager } from './components/CameraRig'
 import { OVERVIEWS } from './scale'
@@ -46,17 +48,11 @@ export default function App() {
         dpr={[1, 2]}
         // depth precision must survive a 5e7 near/far ratio in to-scale mode
         gl={{ logarithmicDepthBuffer: true }}
+        scene={UNIVERSE_SCENE_PROPS}
       >
+        {/* flat color shows until the Milky Way panorama loads (SOL-41) */}
         <color attach="background" args={['#020208']} />
-        <Stars
-          radius={trueScale ? 700_000 : 1500}
-          depth={trueScale ? 300_000 : 400}
-          count={9000}
-          factor={trueScale ? 4000 : 12}
-          saturation={0.1}
-          fade
-          speed={0.4}
-        />
+        <UniverseBackground />
         <SolarSystem />
         <OrbitControls
           makeDefault

@@ -43,6 +43,37 @@ export function useImageTexture(url: string | undefined): THREE.Texture | null {
   return texture
 }
 
+/**
+ * Loads an equirectangular panorama for use as the scene background
+ * (skybox pass). Same cache and async contract as useImageTexture, but
+ * configured for surround mapping instead of surface mapping.
+ */
+export function useBackgroundTexture(url: string): THREE.Texture | null {
+  const fromCache = imageCache.get(url) ?? null
+  const [texture, setTexture] = useState<THREE.Texture | null>(fromCache)
+  useEffect(() => {
+    if (imageCache.has(url)) return
+    let alive = true
+    new THREE.TextureLoader().load(
+      url,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace
+        t.mapping = THREE.EquirectangularReflectionMapping
+        imageCache.set(url, t)
+        if (alive) setTexture(t)
+      },
+      undefined,
+      () => {
+        // load error: stay null, the flat background color remains
+      },
+    )
+    return () => {
+      alive = false
+    }
+  }, [url])
+  return texture
+}
+
 const W = 512
 const H = 256
 
