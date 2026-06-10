@@ -311,11 +311,11 @@ export function ControlPanel() {
         <a href="https://github.com/Stellarium/stellarium" target="_blank" rel="noreferrer">
           Stellarium
         </a>{' '}
-        (GPL-2.0) · Mimas–Iapetus:{' '}
+        (GPL-2.0) · Saturn moons:{' '}
         <a href="https://photojournal.jpl.nasa.gov/catalog/PIA18434" target="_blank" rel="noreferrer">
           Cassini
         </a>{' '}
-        (NASA/JPL/SSI/LPI)
+        (NASA/JPL/SSI/LPI/USGS)
       </p>
     </aside>
     </>

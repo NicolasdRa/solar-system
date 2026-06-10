@@ -367,8 +367,9 @@ export const PLANETS: PlanetData[] = [
     ring: { inner: 1.4, outer: 2.4, color: '#c9b690', textureUrl: '/textures/2k_saturn_ring_alpha.png' },
     moons: [
       // Icy-moon maps: Cassini global color mosaics (Schenk 2014, PIA18434–39).
-      // Titan has no map on purpose: in visible light it is featureless haze,
-      // which the flat color already renders.
+      // Titan's map is the Cassini ISS infrared surface mosaic (USGS, PIA19658)
+      // baked with the haze color — in visible light the surface is hidden,
+      // so this is a stylized compromise, not what the eye would see.
       {
         name: 'Mimas',
         textureUrl: '/textures/mimas.jpg',
@@ -431,6 +432,7 @@ export const PLANETS: PlanetData[] = [
       },
       {
         name: 'Titan',
+        textureUrl: '/textures/titan.jpg',
         relRadius: 0.18,
         aKm: 1221900, eccentricity: 0.029, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 156.9, meanLongitudeDeg: 168.6,
         period: 15.945421,
