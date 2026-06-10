@@ -1,4 +1,4 @@
-import type { MoonData, PlanetData, PlanetKind } from './planets'
+import { FROST_LINE_AU, type MoonData, type PlanetData, type PlanetKind } from './planets'
 
 const NAMES = [
   'Aurelia', 'Borealis', 'Cygnus X', 'Drakon', 'Elysium',
@@ -6,9 +6,6 @@ const NAMES = [
 ]
 
 const MOON_NAMES = ['Alpha', 'Beta', 'Gamma', 'Delta']
-
-/** Distance beyond which volatiles freeze — gas/ice giants form out here. */
-const FROST_LINE_AU = 3.5
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min)

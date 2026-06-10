@@ -1,4 +1,6 @@
 import { Component, type ReactNode } from 'react'
+import { useSim } from '../store'
+import { TRANSLATIONS } from '../i18n'
 
 interface Props {
   children: ReactNode
@@ -22,12 +24,19 @@ export class SceneErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      // class components can't use hooks; the error screen is a dead end
+      // (only escape is a full reload), so a non-reactive read is enough
+      const t = TRANSLATIONS[useSim.getState().locale]
       return (
         <div className="scene-error">
-          <h2>Lost contact with the simulation</h2>
-          <p>{this.state.error.message}</p>
+          <h2>{t.error.title}</h2>
+          <p>{t.error.body}</p>
+          <details>
+            <summary>{t.error.details}</summary>
+            <p>{this.state.error.message}</p>
+          </details>
           <button className="btn" onClick={() => window.location.reload()}>
-            Re-establish link
+            {t.error.reload}
           </button>
         </div>
       )

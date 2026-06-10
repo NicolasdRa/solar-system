@@ -2,9 +2,18 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PLANETS, type PlanetData } from './data/planets'
 import { randomPlanet } from './data/customPlanet'
+// type-only import — erased at runtime, so no store ⇄ i18n module cycle
+import type { Locale } from './i18n'
 
 export type DistanceMode = 'compressed' | 'realistic' | 'true'
 export type SizeMode = 'balanced' | 'true'
+
+/** first visit speaks the browser's language; persisted once the user picks */
+function detectLocale(): Locale {
+  return typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('es')
+    ? 'es'
+    : 'en'
+}
 
 interface SimState {
   /** simulation speed in Earth days per real second */
@@ -28,9 +37,17 @@ interface SimState {
   customPlanets: PlanetData[]
   /** monotonic counter so deleted planets never cause name collisions */
   customCounter: number
+  /** UI language */
+  locale: Locale
+  /** touch gesture coach line was dismissed (or outgrown) */
+  coachDismissed: boolean
+  /** last deleted custom planet, held for the undo window (not persisted) */
+  removedPlanet: PlanetData | null
   set: (partial: Partial<SimState>) => void
   addCustomPlanet: () => void
   removeCustomPlanet: (name: string) => void
+  restoreRemovedPlanet: () => void
+  dismissRemovedPlanet: () => void
 }
 
 export const useSim = create<SimState>()(
@@ -50,6 +67,8 @@ export const useSim = create<SimState>()(
       following: null,
       customPlanets: [],
       customCounter: 0,
+      locale: detectLocale(),
+      coachDismissed: false,
       set: (partial) => set(partial),
       addCustomPlanet: () => {
         const planet = randomPlanet(get().customCounter)
@@ -59,12 +78,25 @@ export const useSim = create<SimState>()(
           selected: planet.name,
         }))
       },
+      removedPlanet: null,
       removeCustomPlanet: (name) =>
         set((s) => ({
           customPlanets: s.customPlanets.filter((p) => p.name !== name),
           selected: s.selected === name ? null : s.selected,
           following: s.following === name ? null : s.following,
+          removedPlanet: s.customPlanets.find((p) => p.name === name) ?? null,
         })),
+      restoreRemovedPlanet: () =>
+        set((s) =>
+          s.removedPlanet
+            ? {
+                customPlanets: [...s.customPlanets, s.removedPlanet],
+                selected: s.removedPlanet.name,
+                removedPlanet: null,
+              }
+            : {},
+        ),
+      dismissRemovedPlanet: () => set({ removedPlanet: null }),
     }),
     {
       name: 'solar-system-settings',
@@ -84,6 +116,8 @@ export const useSim = create<SimState>()(
         following: s.following,
         customPlanets: s.customPlanets,
         customCounter: s.customCounter,
+        locale: s.locale,
+        coachDismissed: s.coachDismissed,
       }),
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as Partial<SimState>) }

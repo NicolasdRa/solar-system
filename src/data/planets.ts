@@ -1,5 +1,8 @@
 export type PlanetKind = 'rocky' | 'earth' | 'gas' | 'ice'
 
+/** Distance beyond which volatiles freeze — gas/ice giants form out here. */
+export const FROST_LINE_AU = 3.5
+
 export interface MoonData {
   name: string
   /** equirectangular texture; procedural color is used when absent */
