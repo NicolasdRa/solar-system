@@ -14,6 +14,12 @@ export interface MoonData {
   /** orbital period in Earth days */
   period: number
   color: string
+  /** a main moon: selectable, followable, and gets its own info panel */
+  major?: boolean
+  /** real mean radius in km — shown in the info panel of major moons */
+  radiusKm?: number
+  /** canonical English fun fact; other locales override via i18n moonFacts */
+  funFact?: string
 }
 
 export interface AtmosphereData {
@@ -158,7 +164,18 @@ export const PLANETS: PlanetData[] = [
       intensity: 1.0,
     },
     moons: [
-      { name: 'Moon', relRadius: 0.27, distance: 3.2, period: 27.3, color: '#b8b4ac', textureUrl: '/textures/2k_moon.jpg' },
+      {
+        name: 'Moon',
+        relRadius: 0.27,
+        distance: 3.2,
+        period: 27.3,
+        color: '#b8b4ac',
+        textureUrl: '/textures/2k_moon.jpg',
+        major: true,
+        radiusKm: 1737,
+        funFact:
+          'The largest moon relative to its planet — born when a Mars-sized world struck the young Earth. It always shows us the same face.',
+      },
     ],
     facts: {
       type: 'Rocky planet · the home world',
@@ -222,10 +239,50 @@ export const PLANETS: PlanetData[] = [
     palette: ['#9c6f4a', '#cda57e', '#ead9bf'],
     features: { spot: true },
     moons: [
-      { name: 'Io', relRadius: 0.12, distance: 2.2, period: 1.77, color: '#d9c356' },
-      { name: 'Europa', relRadius: 0.1, distance: 2.8, period: 3.55, color: '#c7b9a4' },
-      { name: 'Ganymede', relRadius: 0.17, distance: 3.5, period: 7.15, color: '#9a8d7c' },
-      { name: 'Callisto', relRadius: 0.16, distance: 4.4, period: 16.7, color: '#6f6557' },
+      {
+        name: 'Io',
+        relRadius: 0.12,
+        distance: 2.2,
+        period: 1.77,
+        color: '#d9c356',
+        major: true,
+        radiusKm: 1822,
+        funFact:
+          'The most volcanic world in the solar system — Jupiter kneads its insides like dough, and hundreds of volcanoes spray sulfur 500 km high.',
+      },
+      {
+        name: 'Europa',
+        relRadius: 0.1,
+        distance: 2.8,
+        period: 3.55,
+        color: '#c7b9a4',
+        major: true,
+        radiusKm: 1561,
+        funFact:
+          'Beneath its cracked ice shell hides a salty ocean with more water than all of Earth’s seas — a top candidate for life beyond Earth.',
+      },
+      {
+        name: 'Ganymede',
+        relRadius: 0.17,
+        distance: 3.5,
+        period: 7.15,
+        color: '#9a8d7c',
+        major: true,
+        radiusKm: 2634,
+        funFact:
+          'The largest moon in the solar system — bigger than the planet Mercury — and the only one that generates its own magnetic field.',
+      },
+      {
+        name: 'Callisto',
+        relRadius: 0.16,
+        distance: 4.4,
+        period: 16.7,
+        color: '#6f6557',
+        major: true,
+        radiusKm: 2410,
+        funFact:
+          'The most heavily cratered world known — its ancient face has barely changed in four billion years.',
+      },
     ],
     facts: {
       type: 'Gas giant',
@@ -253,11 +310,31 @@ export const PLANETS: PlanetData[] = [
     ring: { inner: 1.4, outer: 2.4, color: '#c9b690', textureUrl: '/textures/2k_saturn_ring_alpha.png' },
     moons: [
       { name: 'Mimas', relRadius: 0.045, distance: 2.8, period: 0.94, color: '#b5b2ac' },
-      { name: 'Enceladus', relRadius: 0.05, distance: 3.3, period: 1.37, color: '#e8eef0' },
+      {
+        name: 'Enceladus',
+        relRadius: 0.05,
+        distance: 3.3,
+        period: 1.37,
+        color: '#e8eef0',
+        major: true,
+        radiusKm: 252,
+        funFact:
+          'Geysers at its south pole blast ocean water into space, feeding one of Saturn’s rings — its fresh snow makes it the most reflective world we know.',
+      },
       { name: 'Tethys', relRadius: 0.07, distance: 3.8, period: 1.89, color: '#c8c5be' },
       { name: 'Dione', relRadius: 0.07, distance: 4.3, period: 2.74, color: '#bdb9b0' },
       { name: 'Rhea', relRadius: 0.09, distance: 4.9, period: 4.52, color: '#b0aca3' },
-      { name: 'Titan', relRadius: 0.18, distance: 5.7, period: 15.9, color: '#cfa84e' },
+      {
+        name: 'Titan',
+        relRadius: 0.18,
+        distance: 5.7,
+        period: 15.9,
+        color: '#cfa84e',
+        major: true,
+        radiusKm: 2575,
+        funFact:
+          'The only moon with a thick atmosphere — under its orange smog, methane rain falls on rivers and seas of liquid natural gas.',
+      },
       { name: 'Iapetus', relRadius: 0.085, distance: 6.8, period: 79.3, color: '#8a7a66' },
     ],
     facts: {
@@ -288,7 +365,17 @@ export const PLANETS: PlanetData[] = [
       { name: 'Miranda', relRadius: 0.06, distance: 2.4, period: 1.41, color: '#b8bcc4' },
       { name: 'Ariel', relRadius: 0.09, distance: 2.9, period: 2.52, color: '#cfd2d6' },
       { name: 'Umbriel', relRadius: 0.09, distance: 3.4, period: 4.14, color: '#6e6a66' },
-      { name: 'Titania', relRadius: 0.11, distance: 4.0, period: 8.71, color: '#b3a89c' },
+      {
+        name: 'Titania',
+        relRadius: 0.11,
+        distance: 4.0,
+        period: 8.71,
+        color: '#b3a89c',
+        major: true,
+        radiusKm: 789,
+        funFact:
+          'Uranus’s largest moon, sliced by canyons up to 1,600 km long — and like its planet, it orbits tipped on its side.',
+      },
       { name: 'Oberon', relRadius: 0.11, distance: 4.7, period: 13.46, color: '#a39588' },
     ],
     facts: {
@@ -316,7 +403,17 @@ export const PLANETS: PlanetData[] = [
     palette: ['#1f3f9e', '#3a64d1', '#7e9ce8'],
     moons: [
       { name: 'Proteus', relRadius: 0.055, distance: 2.3, period: 1.12, color: '#8d8a85' },
-      { name: 'Triton', relRadius: 0.11, distance: 3.2, period: -5.9, color: '#c4bdb2' },
+      {
+        name: 'Triton',
+        relRadius: 0.11,
+        distance: 3.2,
+        period: -5.9,
+        color: '#c4bdb2',
+        major: true,
+        radiusKm: 1353,
+        funFact:
+          'Orbits backwards — a captured Kuiper Belt world like Pluto. Its nitrogen geysers erupt at -235 °C, and one day Neptune will tear it apart.',
+      },
     ],
     facts: {
       type: 'Ice giant',
@@ -350,7 +447,17 @@ export const PLANETS: PlanetData[] = [
       intensity: 0.4,
     },
     moons: [
-      { name: 'Charon', relRadius: 0.5, distance: 3.0, period: 6.4, color: '#8d8377' },
+      {
+        name: 'Charon',
+        relRadius: 0.5,
+        distance: 3.0,
+        period: 6.4,
+        color: '#8d8377',
+        major: true,
+        radiusKm: 606,
+        funFact:
+          'Half the size of Pluto itself — the pair waltz around a point in the space between them, forever showing each other the same face.',
+      },
       { name: 'Styx', relRadius: 0.05, distance: 4.2, period: 20.2, color: '#9a948c' },
       { name: 'Nix', relRadius: 0.06, distance: 4.9, period: 24.9, color: '#b0a99f' },
       { name: 'Kerberos', relRadius: 0.05, distance: 5.6, period: 32.2, color: '#7d776f' },

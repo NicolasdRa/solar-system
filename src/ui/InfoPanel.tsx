@@ -1,8 +1,71 @@
-import { PLANETS } from '../data/planets'
+import { Fragment } from 'react'
+import { PLANETS, type MoonData, type PlanetData } from '../data/planets'
 import { useSim } from '../store'
-import { bodyName, customFactsFor, factsFor, fmt, useT } from '../i18n'
+import { ONE_DECIMAL, bodyName, customFactsFor, factsFor, fmt, moonFactFor, useT, type Translation } from '../i18n'
 import { requestOverview } from '../cameraCommands'
 import { IconRing, IconTarget, IconTrash, IconX } from './icons'
+
+/** Follow / stop-following toggle, shared by the planet and moon views. */
+function FollowButton({ name, displayName }: { name: string; displayName: string }) {
+  const following = useSim((s) => s.following)
+  const set = useSim((s) => s.set)
+  const t = useT()
+  return following === name ? (
+    <button
+      className="btn stop-btn"
+      onClick={() => {
+        set({ following: null })
+        requestOverview()
+      }}
+    >
+      <IconRing /> {t.info.stopFollowing}
+    </button>
+  ) : (
+    <button className="btn" onClick={() => set({ following: name })}>
+      <IconTarget /> {t.info.follow(displayName)}
+    </button>
+  )
+}
+
+/** Info panel for a major moon: parentage, real size, orbit, fun fact, follow. */
+function MoonPanel({ moon, parent, t }: { moon: MoonData; parent: PlanetData; t: Translation }) {
+  const set = useSim((s) => s.set)
+  const displayName = bodyName(moon.name, t)
+  const funFact = moonFactFor(moon, t)
+  return (
+    <aside className="panel info-panel">
+      <header>
+        <h2>{displayName}</h2>
+        <button className="close-btn" onClick={() => set({ selected: null })} aria-label={t.info.close}>
+          <IconX />
+        </button>
+      </header>
+      <p className="body-type">
+        <button className="moon-link" onClick={() => set({ selected: parent.name })}>
+          {t.info.moonOf(bodyName(parent.name, t))}
+        </button>
+      </p>
+
+      <dl>
+        {moon.radiusKm && (
+          <>
+            <dt>{t.info.meanRadius}</dt>
+            <dd>{fmt(moon.radiusKm, t)} {t.units.km}</dd>
+          </>
+        )}
+        <dt>{t.info.orbitalPeriod}</dt>
+        <dd>
+          {t.units.days(fmt(Math.abs(moon.period), t, ONE_DECIMAL))}
+          {moon.period < 0 && ` (${t.info.retrograde})`}
+        </dd>
+      </dl>
+
+      {funFact && <p className="fun-fact">{funFact}</p>}
+
+      <FollowButton name={moon.name} displayName={displayName} />
+    </aside>
+  )
+}
 
 export function InfoPanel() {
   const selected = useSim((s) => s.selected)
@@ -14,7 +77,16 @@ export function InfoPanel() {
 
   if (!selected) return null
 
-  const planet = [...PLANETS, ...customPlanets].find((p) => p.name === selected)
+  const bodies = [...PLANETS, ...customPlanets]
+  const planet = bodies.find((p) => p.name === selected)
+
+  if (!planet) {
+    for (const parent of bodies) {
+      const moon = parent.moons?.find((m) => m.name === selected && m.major)
+      if (moon) return <MoonPanel moon={moon} parent={parent} t={t} />
+    }
+  }
+
   const isCustom = customPlanets.some((p) => p.name === selected)
   // custom planets carry English-only generated facts in localStorage, so
   // their display facts are rebuilt from physical data in the active locale
@@ -42,7 +114,20 @@ export function InfoPanel() {
             {planet.moons && planet.moons.length > 0 && (
               <>
                 <dt>{t.info.moonsShown}</dt>
-                <dd>{planet.moons.map((m) => bodyName(m.name, t)).join(', ')}</dd>
+                <dd>
+                  {planet.moons.map((m, i) => (
+                    <Fragment key={m.name}>
+                      {i > 0 && ', '}
+                      {m.major ? (
+                        <button className="moon-link" onClick={() => set({ selected: m.name })}>
+                          {bodyName(m.name, t)}
+                        </button>
+                      ) : (
+                        bodyName(m.name, t)
+                      )}
+                    </Fragment>
+                  ))}
+                </dd>
               </>
             )}
           </>
@@ -57,21 +142,7 @@ export function InfoPanel() {
 
       <p className="fun-fact">{facts.funFact}</p>
 
-      {following === selected ? (
-        <button
-          className="btn stop-btn"
-          onClick={() => {
-            set({ following: null })
-            requestOverview()
-          }}
-        >
-          <IconRing /> {t.info.stopFollowing}
-        </button>
-      ) : (
-        <button className="btn" onClick={() => set({ following: selected })}>
-          <IconTarget /> {t.info.follow(displayName)}
-        </button>
-      )}
+      <FollowButton name={selected} displayName={displayName} />
       {isCustom && (
         <button
           className="btn delete-btn"

@@ -1,5 +1,5 @@
 import { useSim } from './store'
-import { FROST_LINE_AU, type PlanetData } from './data/planets'
+import { FROST_LINE_AU, type MoonData, type PlanetData } from './data/planets'
 
 export type Locale = 'en' | 'es'
 export type BodyFacts = PlanetData['facts']
@@ -83,6 +83,9 @@ const en = {
     dayLength: 'Day length',
     yearLength: 'Year length',
     temperature: 'Temperature',
+    moonOf: (parent: string) => `Moon of ${parent}`,
+    orbitalPeriod: 'Orbital period',
+    retrograde: 'retrograde',
     follow: (name: string) => `Follow ${name}`,
     stopFollowing: 'Stop following',
     remove: (name: string) => `Remove ${name} from the sky`,
@@ -104,6 +107,8 @@ const en = {
   },
   /** canonical names pass through untranslated */
   bodyNames: {} as Record<string, string>,
+  /** overrides for the moon funFacts in data/planets.ts; English is canonical */
+  moonFacts: {} as Record<string, string>,
   /** overrides for data/planets.ts facts; English only needs the Sun */
   facts: {
     Sun: {
@@ -193,6 +198,9 @@ const es: Translation = {
     dayLength: 'Duración del día',
     yearLength: 'Duración del año',
     temperature: 'Temperatura',
+    moonOf: (parent) => `Luna de ${parent}`,
+    orbitalPeriod: 'Período orbital',
+    retrograde: 'retrógrado',
     follow: (name) => `Seguir a ${name}`,
     stopFollowing: 'Dejar de seguir',
     remove: (name) => `Borrar ${name} del cielo`,
@@ -248,6 +256,18 @@ const es: Translation = {
     Nix: 'Nix',
     Kerberos: 'Cerbero',
     Hydra: 'Hidra',
+  },
+  moonFacts: {
+    Moon: 'La luna más grande en relación con su planeta — nació cuando un mundo del tamaño de Marte chocó contra la joven Tierra. Siempre nos muestra la misma cara.',
+    Io: 'El mundo más volcánico del sistema solar — Júpiter amasa su interior como si fuera masa de pan, y cientos de volcanes lanzan azufre a 500 km de altura.',
+    Europa: 'Bajo su corteza de hielo agrietado se esconde un océano salado con más agua que todos los mares de la Tierra — uno de los mejores candidatos para encontrar vida.',
+    Ganymede: 'La luna más grande del sistema solar — mayor que el planeta Mercurio — y la única que genera su propio campo magnético.',
+    Callisto: 'El mundo con más cráteres que se conoce — su antiguo rostro apenas ha cambiado en cuatro mil millones de años.',
+    Enceladus: 'Los géiseres de su polo sur lanzan agua de su océano al espacio y alimentan uno de los anillos de Saturno — su nieve fresca lo hace el mundo más reflectante que conocemos.',
+    Titan: 'La única luna con una atmósfera densa — bajo su niebla naranja, llueve metano sobre ríos y mares de gas natural líquido.',
+    Titania: 'La luna más grande de Urano, surcada por cañones de hasta 1.600 km — y como su planeta, orbita volcada de lado.',
+    Triton: 'Orbita al revés — un mundo capturado del cinturón de Kuiper, como Plutón. Sus géiseres de nitrógeno brotan a -235 °C, y algún día Neptuno lo despedazará.',
+    Charon: 'La mitad del tamaño del propio Plutón — la pareja baila alrededor de un punto en el espacio entre ambos, mostrándose siempre la misma cara.',
   },
   facts: {
     Sun: {
@@ -376,6 +396,11 @@ export function fmt(value: number, t: Translation, options?: Intl.NumberFormatOp
  */
 export function factsFor(name: string, planet: PlanetData | undefined, t: Translation) {
   return t.facts[name] ?? planet?.facts
+}
+
+/** Fun fact for a moon: locale override first, then the canonical English one. */
+export function moonFactFor(moon: MoonData, t: Translation): string | undefined {
+  return t.moonFacts[moon.name] ?? moon.funFact
 }
 
 /**

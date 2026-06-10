@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useEffect, useRef } from 'react'
 import { bodyPositions } from '../clock'
-import { visualRadius, sunRadius, OVERVIEWS } from '../scale'
+import { visualRadius, sunRadius, OVERVIEWS, MOON_MIN_RADIUS } from '../scale'
 import { PLANETS } from '../data/planets'
 import { useSim } from '../store'
 import { cameraCommands, requestFlyIn } from '../cameraCommands'
@@ -14,8 +14,18 @@ const ORIGIN = new THREE.Vector3(0, 0, 0)
 function bodyVisualRadius(name: string): number {
   const { distanceMode, sizeMode, planetScale, customPlanets } = useSim.getState()
   if (name === 'Sun') return sunRadius(distanceMode, sizeMode)
-  const planet = [...PLANETS, ...customPlanets].find((p) => p.name === name)
-  return planet ? visualRadius(planet.radiusKm, sizeMode, distanceMode) * planetScale : 2
+  const bodies = [...PLANETS, ...customPlanets]
+  const planet = bodies.find((p) => p.name === name)
+  if (planet) return visualRadius(planet.radiusKm, sizeMode, distanceMode) * planetScale
+  for (const parent of bodies) {
+    const moon = parent.moons?.find((m) => m.name === name)
+    if (moon) {
+      const parentRadius = visualRadius(parent.radiusKm, sizeMode, distanceMode) * planetScale
+      // same floor the moon mesh applies to its geometry
+      return Math.max(parentRadius * moon.relRadius, MOON_MIN_RADIUS)
+    }
+  }
+  return 2
 }
 
 /**

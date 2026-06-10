@@ -10,7 +10,7 @@ import {
   useCloudAlphaTexture,
   useImageTexture,
 } from '../textures'
-import { scaleDistance, visualRadius } from '../scale'
+import { MOON_MIN_RADIUS, scaleDistance, visualRadius } from '../scale'
 import { simClock, bodyPositions } from '../clock'
 import { keplerPosition, orbitPath, type OrbitElements } from '../orbit'
 import { useSim } from '../store'
@@ -141,19 +141,41 @@ function Rings({ ring, planetRadius }: { ring: RingData; planetRadius: number })
   )
 }
 
-function Moon({ moon, planetRadius }: { moon: MoonData; planetRadius: number }) {
-  const ref = useRef<THREE.Mesh>(null)
+/**
+ * Geometry and material only — per-frame positioning lives in the parent
+ * Planet's useFrame. Child useFrame callbacks run before the parent's, so
+ * a moon computing its own world position would read the planet's position
+ * from the previous frame and the camera-follow target would jitter at
+ * high time warp.
+ */
+function Moon({ moon, planetRadius, meshRef }: {
+  moon: MoonData
+  planetRadius: number
+  meshRef: (mesh: THREE.Mesh | null) => void
+}) {
   const image = useImageTexture(moon.textureUrl)
-  useFrame(() => {
-    if (!ref.current) return
-    const theta = TWO_PI * (simClock.days / moon.period)
-    const d = planetRadius * moon.distance
-    ref.current.position.set(Math.cos(theta) * d, 0, -Math.sin(theta) * d)
-  })
+  // large moons (Earth's Moon, Titan…) fill real screen space when their
+  // planet is followed — 24×12 segments would show a polygonal silhouette
+  const detailed = moon.relRadius >= 0.15
+  const select = moon.major
+    ? (e: { stopPropagation: () => void }) => {
+        e.stopPropagation()
+        useSim.getState().set({ selected: moon.name })
+      }
+    : undefined
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[Math.max(planetRadius * moon.relRadius, 0.07), 24, 12]} />
-      <meshStandardMaterial map={image ?? undefined} color={image ? '#ffffff' : moon.color} roughness={1} />
+    <mesh ref={meshRef} onClick={select}>
+      <sphereGeometry
+        args={[Math.max(planetRadius * moon.relRadius, MOON_MIN_RADIUS), detailed ? 48 : 24, detailed ? 24 : 12]}
+      />
+      <meshStandardMaterial
+        // remount when the texture arrives: a material compiled without a
+        // map ignores one assigned later unless its shader is rebuilt
+        key={image ? 'textured' : 'flat'}
+        map={image ?? undefined}
+        color={image ? '#ffffff' : moon.color}
+        roughness={1}
+      />
     </mesh>
   )
 }
@@ -414,15 +436,20 @@ export function Planet({ data }: { data: PlanetData }) {
     }
   }, [isGiant, data.features?.spot])
   const worldPos = useMemo(() => new THREE.Vector3(), [])
+  const moonMeshes = useRef(new Map<string, THREE.Mesh>())
   useEffect(() => {
     // registering in an effect (not useMemo) keeps the Map entry pointing
     // at the same instance useFrame writes to, even under StrictMode's
     // double render
     bodyPositions.set(data.name, worldPos)
+    // major moons are followable, so they publish world positions too
+    const majors = data.moons?.filter((m) => m.major) ?? []
+    for (const m of majors) bodyPositions.set(m.name, new THREE.Vector3())
     return () => {
       bodyPositions.delete(data.name)
+      for (const m of majors) bodyPositions.delete(m.name)
     }
-  }, [data.name, worldPos])
+  }, [data.name, data.moons, worldPos])
 
   // labels of inner orbits pile up on the Sun when the camera is far out;
   // hide a label once the viewpoint dwarfs its orbit (hysteresis band so
@@ -434,6 +461,19 @@ export function Planet({ data }: { data: PlanetData }) {
     if (!orbitRef.current) return
     keplerPosition(elements, simClock.days, orbitRef.current.position)
     orbitRef.current.getWorldPosition(worldPos)
+    // moons move here, after their planet, so followed moons get this
+    // frame's planet position instead of trailing it by one frame
+    if (data.moons) {
+      for (const moon of data.moons) {
+        const mesh = moonMeshes.current.get(moon.name)
+        if (!mesh) continue
+        const theta = TWO_PI * (simClock.days / moon.period)
+        const d = radius * moon.distance
+        mesh.position.set(Math.cos(theta) * d, 0, -Math.sin(theta) * d)
+        const target = moon.major ? bodyPositions.get(moon.name) : undefined
+        if (target) mesh.getWorldPosition(target)
+      }
+    }
     if (spinRef.current) {
       // rotationPeriod is in hours; negative values spin retrograde
       spinRef.current.rotation.y = TWO_PI * ((simClock.days * 24) / data.rotationPeriod)
@@ -477,7 +517,15 @@ export function Planet({ data }: { data: PlanetData }) {
           {/* regular moons orbit the planet's equatorial plane, not the
               ecliptic — which is why Uranus's moon system stands on its side */}
           {data.moons?.map((moon) => (
-            <Moon key={moon.name} moon={moon} planetRadius={radius} />
+            <Moon
+              key={moon.name}
+              moon={moon}
+              planetRadius={radius}
+              meshRef={(mesh) => {
+                if (mesh) moonMeshes.current.set(moon.name, mesh)
+                else moonMeshes.current.delete(moon.name)
+              }}
+            />
           ))}
         </group>
         {/* the followed planet fills the view — its distance-scaled label

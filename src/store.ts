@@ -126,6 +126,7 @@ export const useSim = create<SimState>()(
         const names = new Set([
           'Sun',
           ...PLANETS.map((p) => p.name),
+          ...PLANETS.flatMap((p) => p.moons?.filter((m) => m.major).map((m) => m.name) ?? []),
           ...merged.customPlanets.map((p) => p.name),
         ])
         if (merged.following && !names.has(merged.following)) merged.following = null

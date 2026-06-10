@@ -37,6 +37,9 @@ export function scaleDistance(aAU: number, mode: DistanceMode): number {
   }
 }
 
+/** Smallest moon mesh radius, in scene units — keeps pebbles like Phobos visible. */
+export const MOON_MIN_RADIUS = 0.07
+
 /**
  * Convert a real radius in km to a visual radius in scene units.
  *
