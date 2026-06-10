@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html, Line } from '@react-three/drei'
 import * as THREE from 'three'
@@ -14,6 +14,7 @@ import { scaleDistance, visualRadius } from '../scale'
 import { simClock, bodyPositions } from '../clock'
 import { keplerPosition, orbitPath, type OrbitElements } from '../orbit'
 import { useSim } from '../store'
+import { bodyName, useT } from '../i18n'
 
 const TWO_PI = Math.PI * 2
 const DEG = Math.PI / 180
@@ -380,6 +381,7 @@ export function Planet({ data }: { data: PlanetData }) {
   const selected = useSim((s) => s.selected)
   const following = useSim((s) => s.following)
   const set = useSim((s) => s.set)
+  const t = useT()
 
   const elements = useMemo<OrbitElements>(
     () => ({
@@ -422,7 +424,13 @@ export function Planet({ data }: { data: PlanetData }) {
     }
   }, [data.name, worldPos])
 
-  useFrame(() => {
+  // labels of inner orbits pile up on the Sun when the camera is far out;
+  // hide a label once the viewpoint dwarfs its orbit (hysteresis band so
+  // it doesn't flicker at the threshold)
+  const [labelInRange, setLabelInRange] = useState(true)
+  const labelInRangeRef = useRef(true)
+
+  useFrame(({ camera }) => {
     if (!orbitRef.current) return
     keplerPosition(elements, simClock.days, orbitRef.current.position)
     orbitRef.current.getWorldPosition(worldPos)
@@ -433,6 +441,12 @@ export function Planet({ data }: { data: PlanetData }) {
     if (gasShader.current) {
       // wrapped to keep noise inputs small for float32 (same as Earth's clouds)
       gasShader.current.uniforms.uCloudTime.value = simClock.days % 8192
+    }
+    const limit = elements.a * (labelInRangeRef.current ? 9.5 : 8.5)
+    const inRange = camera.position.length() < limit
+    if (inRange !== labelInRangeRef.current) {
+      labelInRangeRef.current = inRange
+      setLabelInRange(inRange)
     }
   })
 
@@ -468,7 +482,7 @@ export function Planet({ data }: { data: PlanetData }) {
         </group>
         {/* the followed planet fills the view — its distance-scaled label
             would blow up to screen size, so it hides while followed */}
-        {showLabels && following !== data.name && (
+        {showLabels && labelInRange && following !== data.name && (
           <Html
             center
             // constant screen-size labels: distance scaling blows up to
@@ -478,7 +492,7 @@ export function Planet({ data }: { data: PlanetData }) {
             occlude={false}
             zIndexRange={[10, 0]}
           >
-            <span onClick={() => set({ selected: data.name })}>{data.name}</span>
+            <span onClick={() => set({ selected: data.name })}>{bodyName(data.name, t)}</span>
           </Html>
         )}
       </group>
