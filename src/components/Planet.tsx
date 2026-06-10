@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html, Line } from '@react-three/drei'
+import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import type { AtmosphereData, MoonData, PlanetData, RingData } from '../data/planets'
 import {
@@ -13,6 +13,7 @@ import {
 import { MOON_MIN_RADIUS, moonOrbitRadius, scaleDistance, visualRadius } from '../scale'
 import { simClock, bodyPositions } from '../clock'
 import { keplerPosition, orbitPath, type OrbitElements } from '../orbit'
+import { FadeLine } from './FadeLine'
 import { useSim } from '../store'
 import { bodyName, useT } from '../i18n'
 
@@ -77,6 +78,25 @@ void main() {
 }
 `
 
+/**
+ * Where an orbit line should dissolve as the camera nears it (SOL-56).
+ *
+ * The polyline's per-vertex bend (2π/segments) is invisible from afar but
+ * perspective-amplifies into a sharp corner once the camera gets within a
+ * few chord lengths of the line — so the fade window must scale with the
+ * chord, not with the orbit. Returns view-space distances in scene units:
+ * fragments closer than fadeNear vanish, beyond fadeFar are untouched.
+ */
+function orbitFadeDistances(a: number, segments: number): { fadeNear: number; fadeFar: number } {
+  const chord = (TWO_PI * a) / segments
+  // window in chords: beyond 5 a chord subtends ~11° of view, so the
+  // per-vertex bend (2π/segments) deflects the line by under 2% of its
+  // on-screen run and no corner reads; within 1 the nearest chord sweeps
+  // most of the screen and no opacity would look smooth. fadeFar tops out
+  // at ~0.16·a, so the orbit always survives past the dissolved stretch.
+  return { fadeNear: chord, fadeFar: 5 * chord }
+}
+
 function OrbitLine({
   elements,
   highlighted,
@@ -95,13 +115,15 @@ function OrbitLine({
     return THREE.MathUtils.clamp(Math.ceil(n / 64) * 64, 192, 4096)
   }, [elements.a, inFocus])
   const points = useMemo(() => orbitPath(elements, segments), [elements, segments])
+  const { fadeNear, fadeFar } = orbitFadeDistances(elements.a, segments)
   return (
-    <Line
+    <FadeLine
       points={points}
       color={highlighted ? '#7eb8ff' : '#46506e'}
-      transparent
       opacity={highlighted ? 0.9 : 0.4}
       lineWidth={highlighted ? 1.5 : 1}
+      fadeNear={fadeNear}
+      fadeFar={fadeFar}
     />
   )
 }
@@ -144,7 +166,17 @@ function Rings({ ring, planetRadius }: { ring: RingData; planetRadius: number })
 /** Faint ellipse around the parent — only shown while the system is in focus. */
 function MoonOrbitLine({ el }: { el: OrbitElements }) {
   const points = useMemo(() => orbitPath(el, 128), [el])
-  return <Line points={points} color="#46506e" transparent opacity={0.35} lineWidth={1} />
+  const { fadeNear, fadeFar } = orbitFadeDistances(el.a, 128)
+  return (
+    <FadeLine
+      points={points}
+      color="#46506e"
+      opacity={0.35}
+      lineWidth={1}
+      fadeNear={fadeNear}
+      fadeFar={fadeFar}
+    />
+  )
 }
 
 /**
@@ -531,7 +563,7 @@ export function Planet({ data }: { data: PlanetData }) {
     return (
       <group key={moon.name} rotation-y={moon.nodeDeg * DEG}>
         <group rotation-x={moon.inclinationDeg * DEG}>
-          {systemInFocus && el && <MoonOrbitLine el={el} />}
+          {showOrbits && systemInFocus && el && <MoonOrbitLine el={el} />}
           <Moon
             moon={moon}
             planetRadius={radius}
