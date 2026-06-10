@@ -22,6 +22,8 @@ interface SimState {
   timeDirection: 1 | -1
   paused: boolean
   showOrbits: boolean
+  /** orbit lines of moons (drawn only while their system is inspected) */
+  showMoonOrbits: boolean
   showLabels: boolean
   showBelts: boolean
   /** animated solar surface, flares and prominences */
@@ -57,6 +59,7 @@ export const useSim = create<SimState>()(
       timeDirection: 1,
       paused: false,
       showOrbits: true,
+      showMoonOrbits: true,
       showLabels: true,
       showBelts: true,
       showStorms: true,
@@ -106,6 +109,7 @@ export const useSim = create<SimState>()(
         timeDirection: s.timeDirection,
         paused: s.paused,
         showOrbits: s.showOrbits,
+        showMoonOrbits: s.showMoonOrbits,
         showLabels: s.showLabels,
         showBelts: s.showBelts,
         showStorms: s.showStorms,

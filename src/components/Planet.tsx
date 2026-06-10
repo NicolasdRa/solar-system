@@ -437,6 +437,7 @@ export function Planet({ data }: { data: PlanetData }) {
   const sizeMode = useSim((s) => s.sizeMode)
   const planetScale = useSim((s) => s.planetScale)
   const showOrbits = useSim((s) => s.showOrbits)
+  const showMoonOrbits = useSim((s) => s.showMoonOrbits)
   const showLabels = useSim((s) => s.showLabels)
   const selected = useSim((s) => s.selected)
   const following = useSim((s) => s.following)
@@ -556,6 +557,11 @@ export function Planet({ data }: { data: PlanetData }) {
     following === data.name ||
     (data.moons?.some((m) => m.name === selected || m.name === following) ?? false)
 
+  // the two orbit toggles are independent: Orbits owns the planet lines,
+  // Moon orbits owns the lunar ones — so "planet orbits off, moon orbits
+  // on" is a valid state while inspecting a system
+  const moonOrbitLineVisible = showMoonOrbits && systemInFocus
+
   // node ⟶ inclination groups orient the orbital plane; positions from
   // keplerPosition land in that plane's x/z
   const renderMoon = (moon: MoonData) => {
@@ -563,7 +569,7 @@ export function Planet({ data }: { data: PlanetData }) {
     return (
       <group key={moon.name} rotation-y={moon.nodeDeg * DEG}>
         <group rotation-x={moon.inclinationDeg * DEG}>
-          {showOrbits && systemInFocus && el && <MoonOrbitLine el={el} />}
+          {moonOrbitLineVisible && el && <MoonOrbitLine el={el} />}
           <Moon
             moon={moon}
             planetRadius={radius}

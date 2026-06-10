@@ -200,6 +200,14 @@ export function ControlPanel() {
         <label>
           <input
             type="checkbox"
+            checked={sim.showMoonOrbits}
+            onChange={(e) => sim.set({ showMoonOrbits: e.target.checked })}
+          />
+          {t.controls.moonOrbits}
+        </label>
+        <label>
+          <input
+            type="checkbox"
             checked={sim.showLabels}
             onChange={(e) => sim.set({ showLabels: e.target.checked })}
           />
