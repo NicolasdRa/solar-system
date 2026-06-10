@@ -6,23 +6,16 @@ import { bodyPositions } from '../clock'
 import { visualRadius, sunRadius, OVERVIEWS } from '../scale'
 import { PLANETS } from '../data/planets'
 import { useSim } from '../store'
+import { cameraCommands, requestFlyIn } from '../cameraCommands'
 
 const offset = new THREE.Vector3()
+const ORIGIN = new THREE.Vector3(0, 0, 0)
 
 function bodyVisualRadius(name: string): number {
   const { distanceMode, sizeMode, planetScale, customPlanets } = useSim.getState()
   if (name === 'Sun') return sunRadius(distanceMode, sizeMode)
   const planet = [...PLANETS, ...customPlanets].find((p) => p.name === name)
   return planet ? visualRadius(planet.radiusKm, sizeMode, distanceMode) * planetScale : 2
-}
-
-/**
- * Set when a scale mode changes mid-follow: the old camera offset is sized
- * for the old ruler (it can be 50,000× off), so the rig re-runs its fly-in.
- */
-let flyInRequested = false
-function requestFlyIn() {
-  flyInRequested = true
 }
 
 /**
@@ -83,6 +76,8 @@ export function CameraRig() {
   const flyProgress = useRef(1)
   const flyStartDistance = useRef(-1)
   const lastFollowed = useRef<string | null>(null)
+  const homeProgress = useRef(1)
+  const homeFrom = useRef(new THREE.Vector3())
 
   useFrame((state, delta) => {
     const camera = state.camera
@@ -91,13 +86,37 @@ export function CameraRig() {
       window.__solar.controls = controls
       window.__solar.scene = state.scene
     }
-    const { following } = useSim.getState()
-    if (following !== lastFollowed.current || flyInRequested) {
-      flyInRequested = false
+    const { following, distanceMode } = useSim.getState()
+    if (cameraCommands.overview) {
+      cameraCommands.overview = false
+      if (!following) {
+        homeProgress.current = 0
+        homeFrom.current.copy(camera.position)
+      }
+    }
+    if (following !== lastFollowed.current || cameraCommands.flyIn) {
+      cameraCommands.flyIn = false
       lastFollowed.current = following
       flyProgress.current = 0
       flyStartDistance.current = -1
+      if (following) homeProgress.current = 1 // a new follow cancels the glide home
     }
+
+    // glide home: ease toward the overview vantage of the current mode
+    // (destination re-read each frame so a mid-glide mode switch converges
+    // on the right overview instead of a stale one)
+    if (homeProgress.current < 1 && controls) {
+      homeProgress.current = Math.min(1, homeProgress.current + delta / 1.5)
+      const eased = 1 - Math.pow(1 - homeProgress.current, 3)
+      camera.position.lerpVectors(
+        homeFrom.current,
+        offset.set(...OVERVIEWS[distanceMode]),
+        eased,
+      )
+      controls.target.lerp(ORIGIN, homeProgress.current < 1 ? 0.18 : 1)
+      return
+    }
+
     if (!following || !controls) return
     const target = bodyPositions.get(following)
     if (!target) return
