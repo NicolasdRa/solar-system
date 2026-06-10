@@ -27,10 +27,17 @@ export interface MoonData {
   meanLongitudeDeg: number
   /** sidereal orbital period in Earth days (negative = retrograde) */
   period: number
+  /**
+   * Irregular (non-round) moons: per-axis mesh scale with mean ≈ 1, ordered
+   * [toward parent, polar, along orbit]. Setting this also tidally locks the
+   * mesh so the long axis — and the map's sub-parent meridian — track the
+   * planet, the equilibrium pose of every real irregular moon.
+   */
+  ellipsoid?: [number, number, number]
   color: string
   /** a main moon: selectable, followable, and gets its own info panel */
   major?: boolean
-  /** real mean radius in km — shown in the info panel of major moons */
+  /** real mean radius in km — sizes the moon on true rulers and shows in the info panel */
   radiusKm?: number
   /** canonical English fun fact; other locales override via i18n moonFacts */
   funFact?: string
@@ -225,8 +232,44 @@ export const PLANETS: PlanetData[] = [
     },
     features: { polarCaps: true },
     moons: [
-      { name: 'Phobos', relRadius: 0.12, aKm: 9375, eccentricity: 0.0151, inclinationDeg: 1.1, nodeDeg: 0, periapsisDeg: 25.5, meanLongitudeDeg: 215.2, period: 0.31891, color: '#8a7f72' },
-      { name: 'Deimos', relRadius: 0.09, aKm: 23457, eccentricity: 0.0002, inclinationDeg: 1.8, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 259.3, period: 1.26244, color: '#9c9184' },
+      // ellipsoids from the measured semi-axes over the mean radius:
+      // Phobos 13.0×11.4×9.1 km / 11.1, Deimos 7.8×6.0×5.1 km / 6.2
+      {
+        name: 'Phobos',
+        textureUrl: '/textures/phobos.png',
+        relRadius: 0.12,
+        ellipsoid: [1.17, 0.82, 1.03],
+        aKm: 9375,
+        eccentricity: 0.0151,
+        inclinationDeg: 1.1,
+        nodeDeg: 0,
+        periapsisDeg: 25.5,
+        meanLongitudeDeg: 215.2,
+        period: 0.31891,
+        color: '#8a7f72',
+        major: true,
+        radiusKm: 11,
+        funFact:
+          'Orbits closer to its planet than any other moon — it laps Mars three times a day, rising in the west and setting in the east. Mars is slowly reeling it in; in ~50 million years it will shatter into a ring.',
+      },
+      {
+        name: 'Deimos',
+        textureUrl: '/textures/deimos.png',
+        relRadius: 0.09,
+        ellipsoid: [1.26, 0.82, 0.97],
+        aKm: 23457,
+        eccentricity: 0.0002,
+        inclinationDeg: 1.8,
+        nodeDeg: 0,
+        periapsisDeg: 0,
+        meanLongitudeDeg: 259.3,
+        period: 1.26244,
+        color: '#9c9184',
+        major: true,
+        radiusKm: 6,
+        funFact:
+          'So small and light that a brisk bicycle ride would hit its escape velocity — a stone thrown hard never comes back down. From the surface of Mars it looks like a bright, slowly drifting star.',
+      },
     ],
     facts: {
       type: 'Rocky planet',
@@ -323,9 +366,24 @@ export const PLANETS: PlanetData[] = [
     palette: ['#a8895a', '#d6bb8a', '#efe2c2'],
     ring: { inner: 1.4, outer: 2.4, color: '#c9b690', textureUrl: '/textures/2k_saturn_ring_alpha.png' },
     moons: [
-      { name: 'Mimas', relRadius: 0.045, aKm: 186000, eccentricity: 0.02, inclinationDeg: 1.6, nodeDeg: 0, periapsisDeg: 226.6, meanLongitudeDeg: 141.9, period: 0.942422, color: '#b5b2ac' },
+      // Icy-moon maps: Cassini global color mosaics (Schenk 2014, PIA18434–39).
+      // Titan has no map on purpose: in visible light it is featureless haze,
+      // which the flat color already renders.
+      {
+        name: 'Mimas',
+        textureUrl: '/textures/mimas.jpg',
+        relRadius: 0.045,
+        aKm: 186000, eccentricity: 0.02, inclinationDeg: 1.6, nodeDeg: 0, periapsisDeg: 226.6, meanLongitudeDeg: 141.9,
+        period: 0.942422,
+        color: '#b5b2ac',
+        major: true,
+        radiusKm: 198,
+        funFact:
+          'The crater Herschel spans a third of its face, giving it the look of the Death Star — the impact that dug it nearly shattered the little moon.',
+      },
       {
         name: 'Enceladus',
+        textureUrl: '/textures/enceladus.jpg',
         relRadius: 0.05,
         aKm: 238400, eccentricity: 0.005, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 176.5,
         period: 1.370218,
@@ -335,9 +393,42 @@ export const PLANETS: PlanetData[] = [
         funFact:
           'Geysers at its south pole blast ocean water into space, feeding one of Saturn’s rings — its fresh snow makes it the most reflective world we know.',
       },
-      { name: 'Tethys', relRadius: 0.07, aKm: 295000, eccentricity: 0.001, inclinationDeg: 1.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 248.3, period: 1.887802, color: '#c8c5be' },
-      { name: 'Dione', relRadius: 0.07, aKm: 377700, eccentricity: 0.002, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.0, period: 2.736915, color: '#bdb9b0' },
-      { name: 'Rhea', relRadius: 0.09, aKm: 527200, eccentricity: 0.001, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 209.5, period: 4.5175, color: '#b0aca3' },
+      {
+        name: 'Tethys',
+        textureUrl: '/textures/tethys.jpg',
+        relRadius: 0.07,
+        aKm: 295000, eccentricity: 0.001, inclinationDeg: 1.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 248.3,
+        period: 1.887802,
+        color: '#c8c5be',
+        major: true,
+        radiusKm: 531,
+        funFact:
+          'Almost pure water ice from surface to core — a single canyon, Ithaca Chasma, stretches three quarters of the way around it.',
+      },
+      {
+        name: 'Dione',
+        textureUrl: '/textures/dione.jpg',
+        relRadius: 0.07,
+        aKm: 377700, eccentricity: 0.002, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.0,
+        period: 2.736915,
+        color: '#bdb9b0',
+        major: true,
+        radiusKm: 561,
+        funFact:
+          'Bright streaks on its trailing side turned out to be towering cliffs of ice — and gravity data hint at a buried ocean deep below.',
+      },
+      {
+        name: 'Rhea',
+        textureUrl: '/textures/rhea.jpg',
+        relRadius: 0.09,
+        aKm: 527200, eccentricity: 0.001, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 209.5,
+        period: 4.5175,
+        color: '#b0aca3',
+        major: true,
+        radiusKm: 764,
+        funFact:
+          'Saturn’s second-largest moon, an ancient ball of ice and rock — and the only moon ever suspected of having rings of its own.',
+      },
       {
         name: 'Titan',
         relRadius: 0.18,
@@ -349,7 +440,18 @@ export const PLANETS: PlanetData[] = [
         funFact:
           'The only moon with a thick atmosphere — under its orange smog, methane rain falls on rivers and seas of liquid natural gas.',
       },
-      { name: 'Iapetus', relRadius: 0.085, aKm: 3561700, eccentricity: 0.028, inclinationDeg: 15.5, nodeDeg: 0, periapsisDeg: 341.0, meanLongitudeDeg: 55.8, period: 79.331, color: '#8a7a66' },
+      {
+        name: 'Iapetus',
+        textureUrl: '/textures/iapetus.jpg',
+        relRadius: 0.085,
+        aKm: 3561700, eccentricity: 0.028, inclinationDeg: 15.5, nodeDeg: 0, periapsisDeg: 341.0, meanLongitudeDeg: 55.8,
+        period: 79.331,
+        color: '#8a7a66',
+        major: true,
+        radiusKm: 735,
+        funFact:
+          'A two-faced world: one hemisphere coal-dark, the other bright as snow — with a mountain ridge running along its equator like the seam of a walnut.',
+      },
     ],
     facts: {
       type: 'Gas giant',
@@ -376,9 +478,9 @@ export const PLANETS: PlanetData[] = [
     palette: ['#3e7f8f', '#6fb3c2', '#b7e0e8'],
     ring: { inner: 1.6, outer: 1.9, color: '#9fc4cc' },
     moons: [
-      { name: 'Miranda', relRadius: 0.06, aKm: 129846, eccentricity: 0.001, inclinationDeg: 4.4, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.7, period: 1.413479, color: '#b8bcc4' },
-      { name: 'Ariel', relRadius: 0.09, aKm: 190929, eccentricity: 0.001, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 203.1, period: 2.520379, color: '#cfd2d6' },
-      { name: 'Umbriel', relRadius: 0.09, aKm: 265986, eccentricity: 0.004, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 251.2, period: 4.144177, color: '#6e6a66' },
+      { name: 'Miranda', radiusKm: 236, relRadius: 0.06, aKm: 129846, eccentricity: 0.001, inclinationDeg: 4.4, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 328.7, period: 1.413479, color: '#b8bcc4' },
+      { name: 'Ariel', radiusKm: 579, relRadius: 0.09, aKm: 190929, eccentricity: 0.001, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 203.1, period: 2.520379, color: '#cfd2d6' },
+      { name: 'Umbriel', radiusKm: 585, relRadius: 0.09, aKm: 265986, eccentricity: 0.004, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 251.2, period: 4.144177, color: '#6e6a66' },
       {
         name: 'Titania',
         relRadius: 0.11,
@@ -390,7 +492,7 @@ export const PLANETS: PlanetData[] = [
         funFact:
           'Uranus’s largest moon, sliced by canyons up to 1,600 km long — and like its planet, it orbits tipped on its side.',
       },
-      { name: 'Oberon', relRadius: 0.11, aKm: 583511, eccentricity: 0.002, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 352.6, period: 13.463239, color: '#a39588' },
+      { name: 'Oberon', radiusKm: 761, relRadius: 0.11, aKm: 583511, eccentricity: 0.002, inclinationDeg: 0.1, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 352.6, period: 13.463239, color: '#a39588' },
     ],
     facts: {
       type: 'Ice giant',
@@ -416,7 +518,7 @@ export const PLANETS: PlanetData[] = [
     perihelionLongitudeDeg: 44.97,
     palette: ['#1f3f9e', '#3a64d1', '#7e9ce8'],
     moons: [
-      { name: 'Proteus', relRadius: 0.055, aKm: 117600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 276.8, period: 1.122315, color: '#8d8a85' },
+      { name: 'Proteus', radiusKm: 210, relRadius: 0.055, aKm: 117600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 276.8, period: 1.122315, color: '#8d8a85' },
       {
         name: 'Triton',
         relRadius: 0.11,
@@ -472,10 +574,10 @@ export const PLANETS: PlanetData[] = [
         funFact:
           'Half the size of Pluto itself — the pair waltz around a point in the space between them, forever showing each other the same face.',
       },
-      { name: 'Styx', relRadius: 0.05, aKm: 43200, eccentricity: 0.025, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 322.5, meanLongitudeDeg: 320.6, period: 20.162, color: '#9a948c' },
-      { name: 'Nix', relRadius: 0.06, aKm: 49300, eccentricity: 0.015, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 31.4, meanLongitudeDeg: 9.6, period: 24.855, color: '#b0a99f' },
-      { name: 'Kerberos', relRadius: 0.05, aKm: 58300, eccentricity: 0.01, inclinationDeg: 0.4, nodeDeg: 0, periapsisDeg: 346.4, meanLongitudeDeg: 262.5, period: 32.168, color: '#7d776f' },
-      { name: 'Hydra', relRadius: 0.06, aKm: 65200, eccentricity: 0.009, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 228.6, period: 38.202, color: '#a8a29a' },
+      { name: 'Styx', radiusKm: 6, relRadius: 0.05, aKm: 43200, eccentricity: 0.025, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 322.5, meanLongitudeDeg: 320.6, period: 20.162, color: '#9a948c' },
+      { name: 'Nix', radiusKm: 20, relRadius: 0.06, aKm: 49300, eccentricity: 0.015, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 31.4, meanLongitudeDeg: 9.6, period: 24.855, color: '#b0a99f' },
+      { name: 'Kerberos', radiusKm: 6, relRadius: 0.05, aKm: 58300, eccentricity: 0.01, inclinationDeg: 0.4, nodeDeg: 0, periapsisDeg: 346.4, meanLongitudeDeg: 262.5, period: 32.168, color: '#7d776f' },
+      { name: 'Hydra', radiusKm: 18, relRadius: 0.06, aKm: 65200, eccentricity: 0.009, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 228.6, period: 38.202, color: '#a8a29a' },
     ],
     facts: {
       type: 'Dwarf planet (Kuiper Belt)',

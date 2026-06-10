@@ -4,7 +4,8 @@ An interactive 3D solar system built with **React Three Fiber** (Three.js), Type
 
 Planet surfaces use real NASA-imagery-derived maps from
 [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0, bundled in
-`public/textures/`). Procedurally painted canvas textures remain as the automatic
+`public/textures/`). Saturn's icy moons use the Cassini global color mosaics
+([PIA18434–PIA18439](https://photojournal.jpl.nasa.gov/catalog/PIA18434), NASA/JPL-Caltech/SSI/LPI). Procedurally painted canvas textures remain as the automatic
 fallback — they cover custom planets, Pluto, minor moons, and offline/failed loads.
 
 ## Run it

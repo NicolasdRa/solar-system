@@ -307,7 +307,15 @@ export function ControlPanel() {
         <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noreferrer">
           Solar System Scope
         </a>{' '}
-        (CC BY 4.0)
+        (CC BY 4.0) · Phobos & Deimos:{' '}
+        <a href="https://github.com/Stellarium/stellarium" target="_blank" rel="noreferrer">
+          Stellarium
+        </a>{' '}
+        (GPL-2.0) · Mimas–Iapetus:{' '}
+        <a href="https://photojournal.jpl.nasa.gov/catalog/PIA18434" target="_blank" rel="noreferrer">
+          Cassini
+        </a>{' '}
+        (NASA/JPL/SSI/LPI)
       </p>
     </aside>
     </>

@@ -10,7 +10,7 @@ import {
   useCloudAlphaTexture,
   useImageTexture,
 } from '../textures'
-import { MOON_MIN_RADIUS, moonOrbitRadius, scaleDistance, visualRadius } from '../scale'
+import { moonOrbitRadius, moonVisualRadius, scaleDistance, visualRadius } from '../scale'
 import { simClock, bodyPositions } from '../clock'
 import { keplerPosition, orbitPath, type OrbitElements } from '../orbit'
 import { FadeLine } from './FadeLine'
@@ -186,15 +186,17 @@ function MoonOrbitLine({ el }: { el: OrbitElements }) {
  * from the previous frame and the camera-follow target would jitter at
  * high time warp.
  */
-function Moon({ moon, planetRadius, meshRef }: {
+function Moon({ moon, radius, meshRef }: {
   moon: MoonData
-  planetRadius: number
+  /** mesh radius in scene units, already floored (see moonVisualRadius) */
+  radius: number
   meshRef: (mesh: THREE.Mesh | null) => void
 }) {
   const image = useImageTexture(moon.textureUrl)
   // large moons (Earth's Moon, Titan…) fill real screen space when their
-  // planet is followed — 24×12 segments would show a polygonal silhouette
-  const detailed = moon.relRadius >= 0.15
+  // planet is followed — 24×12 segments would show a polygonal silhouette;
+  // ellipsoids get the same care since stretching magnifies facets
+  const detailed = moon.relRadius >= 0.15 || moon.ellipsoid !== undefined
   const select = moon.major
     ? (e: { stopPropagation: () => void }) => {
         e.stopPropagation()
@@ -202,10 +204,8 @@ function Moon({ moon, planetRadius, meshRef }: {
       }
     : undefined
   return (
-    <mesh ref={meshRef} onClick={select}>
-      <sphereGeometry
-        args={[Math.max(planetRadius * moon.relRadius, MOON_MIN_RADIUS), detailed ? 48 : 24, detailed ? 24 : 12]}
-      />
+    <mesh ref={meshRef} onClick={select} scale={moon.ellipsoid}>
+      <sphereGeometry args={[radius, detailed ? 48 : 24, detailed ? 24 : 12]} />
       <meshStandardMaterial
         // remount when the texture arrives: a material compiled without a
         // map ignores one assigned later unless its shader is rebuilt
@@ -526,6 +526,10 @@ export function Planet({ data }: { data: PlanetData }) {
         const el = moonElements.get(moon.name)
         if (!mesh || !el) continue
         keplerPosition(el, simClock.days, mesh.position)
+        // tidally locked irregular moons: local +x — the long axis, and
+        // where the sphere geometry puts the map's center meridian (the
+        // sub-parent point on these maps) — stays aimed at the planet
+        if (moon.ellipsoid) mesh.rotation.y = Math.atan2(mesh.position.z, -mesh.position.x)
         const target = moon.major ? bodyPositions.get(moon.name) : undefined
         if (target) mesh.getWorldPosition(target)
       }
@@ -572,7 +576,7 @@ export function Planet({ data }: { data: PlanetData }) {
           {moonOrbitLineVisible && el && <MoonOrbitLine el={el} />}
           <Moon
             moon={moon}
-            planetRadius={radius}
+            radius={moonVisualRadius(moon, data, distanceMode, sizeMode, planetScale)}
             meshRef={(mesh) => {
               if (mesh) moonMeshes.current.set(moon.name, mesh)
               else moonMeshes.current.delete(moon.name)
