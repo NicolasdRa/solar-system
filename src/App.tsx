@@ -7,7 +7,7 @@ import { UniverseBackground } from './components/UniverseBackground'
 import { UNIVERSE_SCENE_PROPS } from './universeScene'
 import { SceneErrorBoundary } from './components/SceneErrorBoundary'
 import { CameraRig, CameraModeManager } from './components/CameraRig'
-import { OVERVIEWS } from './scale'
+import { OVERVIEWS, restingMinDistance } from './scale'
 import { ControlPanel } from './ui/ControlPanel'
 import { InfoPanel } from './ui/InfoPanel'
 import { UndoToast } from './ui/UndoToast'
@@ -17,8 +17,9 @@ import { useSim } from './store'
 import { useT } from './i18n'
 
 export default function App() {
-  const trueScale = useSim((s) => s.distanceMode === 'true')
-  const trueSizes = useSim((s) => s.sizeMode === 'true')
+  const distanceMode = useSim((s) => s.distanceMode)
+  const sizeMode = useSim((s) => s.sizeMode)
+  const trueScale = distanceMode === 'true'
   const locale = useSim((s) => s.locale)
   const t = useT()
   // keep the document itself in the active language — screen readers and
@@ -58,8 +59,9 @@ export default function App() {
           makeDefault
           enableDamping
           dampingFactor={0.08}
-          // true-size planets are small — allow much closer zoom
-          minDistance={trueScale || trueSizes ? 0.2 : 4}
+          // resting value — CameraRig overrides this while a body is
+          // followed, scaling the limit to that body's actual size
+          minDistance={restingMinDistance(distanceMode, sizeMode)}
           maxDistance={trueScale ? 1_200_000 : 2000}
         />
         <CameraRig />

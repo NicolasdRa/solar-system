@@ -42,6 +42,43 @@ export function scaleDistance(aAU: number, mode: DistanceMode): number {
 export const MOON_MIN_RADIUS = 0.07
 
 /**
+ * OrbitControls' zoom-in stop at overview range (no body followed): true
+ * rulers shrink the planets, so the camera must be allowed much closer.
+ * While a body IS followed, CameraRig overrides this with a limit derived
+ * from that body's actual size, so even an 11 km Phobos can fill the view.
+ */
+export function restingMinDistance(distanceMode: DistanceMode, sizeMode: SizeMode): number {
+  return distanceMode === 'true' || sizeMode === 'true' ? 0.2 : 4
+}
+
+/**
+ * Mesh radius for a moon — the single source of truth shared by the moon
+ * mesh, the camera rig's follow framing and the orbit clamp. Balanced
+ * sizes use the authored display fraction (relRadius compensates for the
+ * square-root compression of large parents). True rulers recompute from
+ * the real radii so size ratios are exact, with NO visibility floor —
+ * Phobos genuinely is a sub-pixel speck from Mars-overview distance, the
+ * way NASA's Eyes or Celestia draw it. It stays reachable through the
+ * info-panel links and its orbit line, and the camera rig's adaptive near
+ * plane lets a follow or deep zoom fill the screen with it. relRadius is
+ * the fallback for moons of generated planets, which carry no real radius.
+ */
+export function moonVisualRadius(
+  moon: MoonData,
+  parent: { radiusKm: number },
+  distanceMode: DistanceMode,
+  sizeMode: SizeMode,
+  planetScale: number,
+): number {
+  const parentRadius = visualRadius(parent.radiusKm, sizeMode, distanceMode) * planetScale
+  if (sizeMode === 'true' || distanceMode === 'true') {
+    const rel = moon.radiusKm ? moon.radiusKm / parent.radiusKm : moon.relRadius
+    return parentRadius * rel
+  }
+  return Math.max(parentRadius * moon.relRadius, MOON_MIN_RADIUS)
+}
+
+/**
  * Convert a real radius in km to a visual radius in scene units.
  *
  * 'balanced' uses square-root compression: Jupiter stays clearly bigger
@@ -78,7 +115,7 @@ export function moonOrbitRadius(
   planetScale: number,
 ): number {
   const parentRadius = visualRadius(parent.radiusKm, sizeMode, distanceMode) * planetScale
-  const moonRadius = Math.max(parentRadius * moon.relRadius, MOON_MIN_RADIUS)
+  const moonRadius = moonVisualRadius(moon, parent, distanceMode, sizeMode, planetScale)
   let a: number
   if (distanceMode === 'true') {
     a = moon.aKm * (EARTH_VISUAL_TRUE / EARTH_RADIUS_KM)
