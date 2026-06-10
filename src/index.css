@@ -1,0 +1,436 @@
+:root {
+  --panel-bg: rgba(10, 14, 28, 0.78);
+  --panel-border: rgba(120, 150, 220, 0.18);
+  --text: #dbe4f5;
+  --text-dim: #8d99b8;
+  --accent: #6fa8ff;
+  font-family: 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #020208;
+  color: var(--text);
+}
+
+.app {
+  position: relative;
+  height: 100%;
+}
+
+.app canvas {
+  display: block;
+}
+
+/* ── floating panels ─────────────────────────────── */
+
+.panel {
+  position: absolute;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.title {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.title p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ── control panel ───────────────────────────────── */
+
+.control-panel {
+  top: 18px;
+  left: 18px;
+  width: 272px;
+  max-height: calc(100% - 36px);
+  overflow-y: auto;
+}
+
+.divider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: 14px 0;
+}
+
+.panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  background: rgba(120, 150, 220, 0.25);
+  border-radius: 4px;
+}
+
+.panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 150, 220, 0.25) transparent;
+}
+
+.sim-date-row {
+  display: flex;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+
+.date-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 8px;
+  color-scheme: dark;
+}
+
+.today-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.dir-btn {
+  font-variant-numeric: tabular-nums;
+}
+
+.dir-btn.reversed {
+  background: rgba(186, 130, 255, 0.2);
+  border-color: rgba(186, 130, 255, 0.45);
+}
+
+.hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.control-panel h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.control-panel h3 {
+  margin: 14px 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.speed-readout {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.slider-label input {
+  width: 100%;
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+
+.toggles {
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.toggles label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.toggles input {
+  accent-color: var(--accent);
+}
+
+.mode-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.segmented {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.segmented button {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 7px 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--panel-border);
+}
+
+.segmented button.active {
+  background: rgba(111, 168, 255, 0.22);
+  color: var(--text);
+}
+
+.segmented button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.body-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.body-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.body-btn:hover {
+  background: rgba(111, 168, 255, 0.15);
+}
+
+.body-btn.active {
+  border-color: var(--accent);
+  background: rgba(111, 168, 255, 0.2);
+}
+
+.btn {
+  background: rgba(111, 168, 255, 0.18);
+  border: 1px solid rgba(111, 168, 255, 0.35);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover {
+  background: rgba(111, 168, 255, 0.32);
+}
+
+.add-btn {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.stop-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(255, 150, 90, 0.16);
+  border-color: rgba(255, 150, 90, 0.4);
+}
+
+.delete-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(255, 95, 95, 0.14);
+  border-color: rgba(255, 95, 95, 0.4);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 95, 95, 0.3);
+}
+
+.credits {
+  margin: 12px 0 0;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.credits a {
+  color: var(--text-dim);
+}
+
+/* ── info panel ──────────────────────────────────── */
+
+.info-panel {
+  top: 18px;
+  right: 18px;
+  width: 290px;
+  max-height: calc(100% - 36px);
+  overflow-y: auto;
+}
+
+.info-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-panel h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: var(--text);
+}
+
+.body-type {
+  margin: 2px 0 12px;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+
+.info-panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.info-panel dt {
+  color: var(--text-dim);
+}
+
+.info-panel dd {
+  margin: 0;
+  text-align: right;
+}
+
+.fun-fact {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  border-left: 2px solid var(--accent);
+  padding-left: 10px;
+  margin: 0 0 14px;
+}
+
+.info-panel .btn {
+  width: 100%;
+}
+
+/* ── scene error fallback ────────────────────────── */
+
+.scene-error {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.scene-error p {
+  color: var(--text-dim);
+  font-size: 13px;
+  max-width: 420px;
+}
+
+/* ── 3D labels (drei Html) ───────────────────────── */
+
+.body-label span {
+  font-size: 13px;
+  color: rgba(220, 230, 250, 0.85);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.body-label span:hover {
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .control-panel {
+    width: 200px;
+  }
+  .info-panel {
+    width: 230px;
+  }
+  .title p {
+    display: none;
+  }
+}
