@@ -3,9 +3,9 @@ import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useEffect, useRef } from 'react'
 import { bodyPositions } from '../clock'
-import { visualRadius, sunRadius, TRUE_UNITS_PER_AU } from '../scale'
+import { visualRadius, sunRadius, OVERVIEWS } from '../scale'
 import { PLANETS } from '../data/planets'
-import { useSim, type DistanceMode } from '../store'
+import { useSim } from '../store'
 
 const offset = new THREE.Vector3()
 
@@ -16,19 +16,12 @@ function bodyVisualRadius(name: string): number {
   return planet ? visualRadius(planet.radiusKm, sizeMode, distanceMode) * planetScale : 2
 }
 
-const OVERVIEWS: Record<DistanceMode, [number, number, number]> = {
-  compressed: [0, 70, 150],
-  realistic: [0, 200, 430],
-  // far enough out to take in Neptune's orbit (~30 AU on the true ruler)
-  true: [0, 16 * TRUE_UNITS_PER_AU, 36 * TRUE_UNITS_PER_AU],
-}
-
 /**
  * Set when a scale mode changes mid-follow: the old camera offset is sized
  * for the old ruler (it can be 50,000× off), so the rig re-runs its fly-in.
  */
 let flyInRequested = false
-export function requestFlyIn() {
+function requestFlyIn() {
   flyInRequested = true
 }
 
@@ -40,8 +33,10 @@ export function requestFlyIn() {
 export function CameraModeManager() {
   const distanceMode = useSim((s) => s.distanceMode)
   const sizeMode = useSim((s) => s.sizeMode)
-  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
-  const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
+  // read three's state lazily inside effects: holding the camera as a
+  // hook-returned reference trips react-hooks/immutability when we mutate it
+  const get = useThree((s) => s.get)
+  const controlsReady = useThree((s) => s.controls !== null)
   const prevMode = useRef(distanceMode)
   const prevSizeMode = useRef(sizeMode)
 
@@ -54,6 +49,8 @@ export function CameraModeManager() {
   }, [sizeMode])
 
   useEffect(() => {
+    const camera = get().camera as THREE.PerspectiveCamera
+    const controls = get().controls as OrbitControlsImpl | null
     camera.far = distanceMode === 'true' ? 2_500_000 : 8000
     camera.near = distanceMode === 'true' ? 0.05 : 0.1
     camera.updateProjectionMatrix()
@@ -66,7 +63,7 @@ export function CameraModeManager() {
         controls.target.set(0, 0, 0)
       }
     }
-  }, [distanceMode, camera, controls])
+  }, [distanceMode, get, controlsReady])
 
   return null
 }

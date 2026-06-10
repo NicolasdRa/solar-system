@@ -10,6 +10,14 @@ const EARTH_VISUAL_TRUE = 0.45
 /** Scene units per AU when distances share the true ruler (≈ 10,568). */
 export const TRUE_UNITS_PER_AU = EARTH_VISUAL_TRUE * (KM_PER_AU / EARTH_RADIUS_KM)
 
+/** Default camera vantage point for each distance mode. */
+export const OVERVIEWS: Record<DistanceMode, [number, number, number]> = {
+  compressed: [0, 70, 150],
+  realistic: [0, 200, 430],
+  // far enough out to take in Neptune's orbit (~30 AU on the true ruler)
+  true: [0, 16 * TRUE_UNITS_PER_AU, 36 * TRUE_UNITS_PER_AU],
+}
+
 /**
  * Convert a semi-major axis in AU to scene units.
  *

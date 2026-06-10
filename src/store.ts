@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { PlanetData } from './data/planets'
+import { persist } from 'zustand/middleware'
+import { PLANETS, type PlanetData } from './data/planets'
 import { randomPlanet } from './data/customPlanet'
 
 export type DistanceMode = 'compressed' | 'realistic' | 'true'
@@ -32,34 +33,71 @@ interface SimState {
   removeCustomPlanet: (name: string) => void
 }
 
-export const useSim = create<SimState>((set, get) => ({
-  timeScale: 1 / 24, // 1 real second = 1 simulated hour
-  timeDirection: 1,
-  paused: false,
-  showOrbits: true,
-  showLabels: true,
-  showBelts: true,
-  showStorms: true,
-  distanceMode: 'compressed',
-  sizeMode: 'balanced',
-  planetScale: 1,
-  selected: null,
-  following: null,
-  customPlanets: [],
-  customCounter: 0,
-  set: (partial) => set(partial),
-  addCustomPlanet: () => {
-    const planet = randomPlanet(get().customCounter)
-    set((s) => ({
-      customPlanets: [...s.customPlanets, planet],
-      customCounter: s.customCounter + 1,
-      selected: planet.name,
-    }))
-  },
-  removeCustomPlanet: (name) =>
-    set((s) => ({
-      customPlanets: s.customPlanets.filter((p) => p.name !== name),
-      selected: s.selected === name ? null : s.selected,
-      following: s.following === name ? null : s.following,
-    })),
-}))
+export const useSim = create<SimState>()(
+  persist(
+    (set, get) => ({
+      timeScale: 1 / 24, // 1 real second = 1 simulated hour
+      timeDirection: 1,
+      paused: false,
+      showOrbits: true,
+      showLabels: true,
+      showBelts: true,
+      showStorms: true,
+      distanceMode: 'compressed',
+      sizeMode: 'balanced',
+      planetScale: 1,
+      selected: null,
+      following: null,
+      customPlanets: [],
+      customCounter: 0,
+      set: (partial) => set(partial),
+      addCustomPlanet: () => {
+        const planet = randomPlanet(get().customCounter)
+        set((s) => ({
+          customPlanets: [...s.customPlanets, planet],
+          customCounter: s.customCounter + 1,
+          selected: planet.name,
+        }))
+      },
+      removeCustomPlanet: (name) =>
+        set((s) => ({
+          customPlanets: s.customPlanets.filter((p) => p.name !== name),
+          selected: s.selected === name ? null : s.selected,
+          following: s.following === name ? null : s.following,
+        })),
+    }),
+    {
+      name: 'solar-system-settings',
+      version: 1,
+      partialize: (s) => ({
+        timeScale: s.timeScale,
+        timeDirection: s.timeDirection,
+        paused: s.paused,
+        showOrbits: s.showOrbits,
+        showLabels: s.showLabels,
+        showBelts: s.showBelts,
+        showStorms: s.showStorms,
+        distanceMode: s.distanceMode,
+        sizeMode: s.sizeMode,
+        planetScale: s.planetScale,
+        selected: s.selected,
+        following: s.following,
+        customPlanets: s.customPlanets,
+        customCounter: s.customCounter,
+      }),
+      merge: (persisted, current) => {
+        const merged = { ...current, ...(persisted as Partial<SimState>) }
+        // a saved selection may reference a body that no longer exists
+        // (renamed planet, custom planet from an older data shape)
+        const names = new Set([
+          'Sun',
+          ...PLANETS.map((p) => p.name),
+          ...merged.customPlanets.map((p) => p.name),
+        ])
+        if (merged.following && !names.has(merged.following)) merged.following = null
+        if (merged.selected && !names.has(merged.selected)) merged.selected = null
+        return merged
+      },
+    },
+  ),
+)

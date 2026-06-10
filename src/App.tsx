@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { SolarSystem } from './components/SolarSystem'
 import { SceneErrorBoundary } from './components/SceneErrorBoundary'
 import { CameraRig, CameraModeManager } from './components/CameraRig'
+import { OVERVIEWS } from './scale'
 import { ControlPanel } from './ui/ControlPanel'
 import { InfoPanel } from './ui/InfoPanel'
 import { useSim } from './store'
@@ -11,11 +13,24 @@ import { useSim } from './store'
 export default function App() {
   const trueScale = useSim((s) => s.distanceMode === 'true')
   const trueSizes = useSim((s) => s.sizeMode === 'true')
+  // the persisted distance mode is already hydrated here (localStorage is
+  // synchronous), so the camera can start at the matching overview instead
+  // of the compressed-mode default; captured once — later mode switches are
+  // handled by CameraModeManager
+  const [initialCamera] = useState(() => {
+    const mode = useSim.getState().distanceMode
+    return {
+      position: OVERVIEWS[mode],
+      fov: 50,
+      near: mode === 'true' ? 0.05 : 0.1,
+      far: mode === 'true' ? 2_500_000 : 8000,
+    }
+  })
   return (
     <div className="app">
       <SceneErrorBoundary>
       <Canvas
-        camera={{ position: [0, 70, 150], fov: 50, near: 0.1, far: 8000 }}
+        camera={initialCamera}
         dpr={[1, 2]}
         // depth precision must survive a 5e7 near/far ratio in to-scale mode
         gl={{ logarithmicDepthBuffer: true }}
