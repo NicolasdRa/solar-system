@@ -96,13 +96,14 @@ varying vec3 vViewPos;
 ${NOISE_GLSL}
 void main() {
   vec3 toCamera = normalize(-vViewPos);
-  // BackSide shell at 2.1 solar radii: -dot is ~0.88 at the limb, 0 at the outer edge
+  // BackSide shell at 3.2 solar radii: -dot is ~0.95 at the limb, 0 at the outer edge
   float rim = clamp(-dot(normalize(vNormal), toCamera), 0.0, 1.0);
-  float t = clamp(1.0 - rim / 0.88, 0.0, 1.0); // 0 at the limb -> 1 at the edge
+  float t = clamp(1.0 - rim / 0.95, 0.0, 1.0); // 0 at the limb -> 1 at the edge
   float wisp = fbm(vNormal.xy * 4.0 + vec2(uTime * 0.015, -uTime * 0.01));
-  float intensity = exp(-t * (3.0 + 3.5 * wisp));
-  // exp() never reaches zero — force it to, so the shell's silhouette can't show
-  intensity *= 1.0 - smoothstep(0.7, 1.0, t);
+  float intensity = exp(-t * (3.5 + 4.0 * wisp));
+  // exp() never reaches zero — land it there smoothly: (1-t)^2 hits zero at the
+  // shell edge with zero slope, so no visible ring where the geometry ends
+  intensity *= (1.0 - t) * (1.0 - t);
   // hot white-yellow at the limb cooling to faint deep orange far out
   vec3 color = mix(vec3(1.5, 1.15, 0.7), vec3(0.9, 0.35, 0.1), smoothstep(0.0, 0.6, t));
   gl_FragColor = vec4(color, intensity);
@@ -321,7 +322,7 @@ export function Sun() {
     }
     if (coronaRef.current) {
       // the corona breathes a little
-      const pulse = 2.1 + 0.04 * Math.sin(clock.getElapsedTime() * 0.6)
+      const pulse = 3.2 + 0.06 * Math.sin(clock.getElapsedTime() * 0.6)
       coronaRef.current.scale.setScalar(pulse)
     }
     if (coronaMatRef.current) {
@@ -352,7 +353,7 @@ export function Sun() {
           )}
         </mesh>
         {/* corona — additive streamers with exponential falloff, never muddies what's behind it */}
-        <mesh ref={coronaRef} scale={2.1}>
+        <mesh ref={coronaRef} scale={3.2}>
           <sphereGeometry args={[1, 48, 24]} />
           <shaderMaterial
             ref={coronaMatRef}
