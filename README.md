@@ -7,8 +7,18 @@ Planet surfaces use real NASA-imagery-derived maps from
 `public/textures/`). Saturn's icy moons use the Cassini global color mosaics
 ([PIA18434–PIA18439](https://photojournal.jpl.nasa.gov/catalog/PIA18434), NASA/JPL-Caltech/SSI/LPI);
 Titan uses the [Cassini ISS infrared surface mosaic](https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m)
-(NASA/JPL-Caltech/SSI/USGS) pre-tinted with its haze color, since the visible-light surface is hidden. Procedurally painted canvas textures remain as the automatic
-fallback — they cover custom planets, Pluto, minor moons, and offline/failed loads.
+(NASA/JPL-Caltech/SSI/USGS) pre-tinted with its haze color, since the visible-light surface is hidden.
+The Galilean moons, Triton and Charon use [USGS Astrogeology](https://astrogeology.usgs.gov/search) global
+mosaics (NASA/JPL/USGS; Charon: NASA/JHUAPL/SwRI), prepared by `scripts/prepare-maps.py`: Europa,
+Callisto and Charon exist only as grayscale products and are duotone-tinted to their real hues, and
+Triton's unimaged northern hemisphere is filled with low-frequency haze extrapolated from the imaged
+terrain. No usable public-domain global map exists for the Uranian moons (Voyager 2 saw only their
+southern hemispheres), so they keep procedural colors.
+Pluto uses the [New Horizons MVIC color mosaic](https://science.nasa.gov/resource/pluto-global-color-map/)
+(NASA/JHUAPL/SwRI). Uranus and Neptune use real Hubble global maps from the
+[OPAL program](https://archive.stsci.edu/hlsp/opal) (CC BY 4.0, DOI 10.17909/T9G593, NASA/ESA/STScI,
+Simon & Wong) — their unobserved latitudes mirror the imaged hemisphere. Procedurally painted canvas
+textures remain as the automatic fallback — they cover custom planets, minor moons, and offline/failed loads.
 
 ## Run it
 

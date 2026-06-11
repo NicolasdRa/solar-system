@@ -296,8 +296,13 @@ export const PLANETS: PlanetData[] = [
     palette: ['#9c6f4a', '#cda57e', '#ead9bf'],
     features: { spot: true },
     moons: [
+      // Galilean maps: USGS Astrogeology Voyager/Galileo SSI global mosaics
+      // (scripts/prepare-maps.py). Io and Ganymede are the color
+      // products; Europa and Callisto exist only in grayscale and are
+      // duotone-tinted to their real hues, like Titan's baked haze.
       {
         name: 'Io',
+        textureUrl: '/textures/io.jpg',
         relRadius: 0.12,
         aKm: 421800, eccentricity: 0.0041, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 49.1, meanLongitudeDeg: 20.0,
         period: 1.769138,
@@ -309,6 +314,7 @@ export const PLANETS: PlanetData[] = [
       },
       {
         name: 'Europa',
+        textureUrl: '/textures/europa.jpg',
         relRadius: 0.1,
         aKm: 671100, eccentricity: 0.0094, inclinationDeg: 0.5, nodeDeg: 0, periapsisDeg: 229.0, meanLongitudeDeg: 214.4,
         period: 3.551181,
@@ -320,6 +326,7 @@ export const PLANETS: PlanetData[] = [
       },
       {
         name: 'Ganymede',
+        textureUrl: '/textures/ganymede.jpg',
         relRadius: 0.17,
         aKm: 1070400, eccentricity: 0.0011, inclinationDeg: 0.2, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 221.6,
         period: 7.154553,
@@ -331,6 +338,7 @@ export const PLANETS: PlanetData[] = [
       },
       {
         name: 'Callisto',
+        textureUrl: '/textures/callisto.jpg',
         relRadius: 0.16,
         aKm: 1882700, eccentricity: 0.0074, inclinationDeg: 0.3, nodeDeg: 0, periapsisDeg: 352.9, meanLongitudeDeg: 80.3,
         period: 16.689017,
@@ -466,7 +474,10 @@ export const PLANETS: PlanetData[] = [
   },
   {
     name: 'Uranus',
-    textureUrl: '/textures/2k_uranus.jpg',
+    // Hubble OPAL 2025 global map (CC BY 4.0): real seasonal look — bright
+    // polar hood, cyan mid-latitudes. The unobserved southern hemisphere
+    // mirrors the northern one (scripts/prepare-maps.py).
+    textureUrl: '/textures/uranus.jpg',
     kind: 'ice',
     radiusKm: 25362,
     distanceAU: 19.2,
@@ -507,7 +518,11 @@ export const PLANETS: PlanetData[] = [
   },
   {
     name: 'Neptune',
-    textureUrl: '/textures/2k_neptune.jpg',
+    // Hubble OPAL 2025 global map (CC BY 4.0), white-balanced to Neptune's
+    // deep blue and punched up (saturation, contrast, pole-darkening
+    // latitude shade) so HST's soft disc reads on the sphere; unobserved
+    // north mirrored from the south
+    textureUrl: '/textures/neptune.jpg',
     kind: 'ice',
     radiusKm: 24622,
     distanceAU: 30.1,
@@ -523,6 +538,9 @@ export const PLANETS: PlanetData[] = [
       { name: 'Proteus', radiusKm: 210, relRadius: 0.055, aKm: 117600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 276.8, period: 1.122315, color: '#8d8a85' },
       {
         name: 'Triton',
+        // Voyager 2 global color mosaic; the unimaged north is filled with
+        // a low-frequency haze extrapolated from the imaged hemisphere
+        textureUrl: '/textures/triton.jpg',
         relRadius: 0.11,
         aKm: 354800, eccentricity: 0.0, inclinationDeg: 157.3, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 241.1,
         period: -5.876854,
@@ -544,6 +562,10 @@ export const PLANETS: PlanetData[] = [
   },
   {
     name: 'Pluto',
+    // New Horizons MVIC color mosaic (NASA/JHUAPL/SwRI) — Sputnik Planitia
+    // and all; the south was unlit during the 2015 flyby and carries the
+    // low-frequency fill from scripts/prepare-maps.py
+    textureUrl: '/textures/pluto.jpg',
     kind: 'rocky',
     radiusKm: 1188,
     distanceAU: 39.5,
@@ -567,6 +589,9 @@ export const PLANETS: PlanetData[] = [
     moons: [
       {
         name: 'Charon',
+        // New Horizons LORRI/MVIC global mosaic (grayscale, duotone-tinted);
+        // the non-encounter hemisphere is the source's own smooth fill
+        textureUrl: '/textures/charon.jpg',
         relRadius: 0.5,
         aKm: 19600, eccentricity: 0.0, inclinationDeg: 0.0, nodeDeg: 0, periapsisDeg: 0, meanLongitudeDeg: 304.1,
         period: 6.387221,
